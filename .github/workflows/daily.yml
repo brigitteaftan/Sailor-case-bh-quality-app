@@ -1,0 +1,52 @@
+# Weekday morning refresh: load the day's exports, recompute scorecards and
+# notifications, send the urgent list (and the Monday digest), and commit the
+# new results so Vercel redeploys the app.
+name: Daily refresh
+
+on:
+  schedule:
+    - cron: "0 10 * * 1-5"   # 10:00 UTC = 6:00 AM New York (5:00 AM in winter)
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install pipeline dependencies
+        run: pip install -r pipeline/requirements.txt
+
+      # In production this step pulls the morning's EHR, scheduling and billing
+      # exports (SFTP, S3 or an API) into data/raw/, matching pipeline/SCHEMA.md.
+      # The demo ships fixed mock exports, so there is nothing to fetch.
+      - name: Load today's exports
+        run: echo "Using exports in data/raw (source=$(python3 -c "import json;print(json.load(open('data/raw/export_meta.json'))['source'])"))"
+
+      - name: Compute scorecards, flags and notifications
+        run: python3 pipeline/compute.py
+
+      - name: Send notifications
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          APP_URL: ${{ vars.APP_URL }}
+        run: python3 pipeline/notify.py
+
+      - name: Commit results
+        run: |
+          git config user.name "daily-refresh-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/computed
+          if git diff --cached --quiet; then
+            echo "No changes today."
+          else
+            git commit -m "Daily refresh: $(date -u +%F)"
+            git push
+          fi

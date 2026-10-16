@@ -1,0 +1,288 @@
+{
+  "pod": {
+    "name": "Pod Northeast 2",
+    "program": "Sailor Health (mock)"
+  },
+  "metrics": [
+    {
+      "id": "intake_assessment",
+      "domain": "Process",
+      "label": "Intake assessment completed",
+      "definition": "Share of new patients with PHQ-9, GAD-7 and a suicide-risk screen completed at the first visit.",
+      "numerator": "New patients with PHQ-9 + GAD-7 + risk screen on the intake date",
+      "denominator": "Patients with an intake in the last 6 months (intake 14+ days ago)",
+      "window": "Intakes, last 6 months",
+      "target": 0.95,
+      "flag": 0.85,
+      "direction": "higher",
+      "min_n": 8,
+      "fmt": "pct"
+    },
+    {
+      "id": "care_plan",
+      "domain": "Process",
+      "label": "Care plan by session 2",
+      "definition": "Share of new patients with a documented care plan by their second attended session.",
+      "numerator": "New patients with a care plan dated on or before session 2",
+      "denominator": "Patients with an intake in the last 6 months who have attended 2+ sessions",
+      "window": "Intakes, last 6 months",
+      "target": 0.95,
+      "flag": 0.85,
+      "direction": "higher",
+      "min_n": 8,
+      "fmt": "pct"
+    },
+    {
+      "id": "geriatric_screen",
+      "domain": "Process",
+      "label": "Geriatric screen at intake",
+      "definition": "Share of new patients with both a GDS-15 (late-life depression) and a Mini-Cog (cognitive screen) by session 2.",
+      "numerator": "New patients with GDS-15 and Mini-Cog on or before session 2",
+      "denominator": "Patients with an intake in the last 6 months who have attended 2+ sessions",
+      "window": "Intakes, last 6 months",
+      "target": 0.95,
+      "flag": 0.85,
+      "direction": "higher",
+      "min_n": 8,
+      "fmt": "pct"
+    },
+    {
+      "id": "followup_assessment",
+      "domain": "Process",
+      "label": "Outcome re-measured in last 60 days",
+      "definition": "Share of active patients (in care 60+ days) with a PHQ-9 in the last 60 days.",
+      "numerator": "Active patients with a PHQ-9 in the last 60 days",
+      "denominator": "Active patients whose intake was 60+ days ago",
+      "window": "Point in time",
+      "target": 0.9,
+      "flag": 0.75,
+      "direction": "higher",
+      "min_n": 8,
+      "fmt": "pct"
+    },
+    {
+      "id": "improvement",
+      "domain": "Clinical outcomes",
+      "label": "Improved since intake",
+      "definition": "Share of patients who started at PHQ-9 >= 10 whose latest PHQ-9 is 5+ points lower than intake (the minimal clinically important difference).",
+      "numerator": "Patients whose latest PHQ-9 is >= 5 points below intake",
+      "denominator": "Patients seen in last 12 months with intake PHQ-9 >= 10 and a follow-up PHQ-9 6+ weeks after intake",
+      "window": "Patients seen, last 12 months",
+      "target": 0.65,
+      "flag": 0.5,
+      "direction": "higher",
+      "min_n": 8,
+      "fmt": "pct"
+    },
+    {
+      "id": "remission",
+      "domain": "Clinical outcomes",
+      "label": "Remission at 6 months",
+      "definition": "Share of patients who started at PHQ-9 >= 10 with a PHQ-9 < 5 at 6 months (most recent score 4-8 months after intake). No score in the window counts as not in remission, as in the CMS measure.",
+      "numerator": "Patients with PHQ-9 < 5 at the 6-month point",
+      "denominator": "Patients with intake PHQ-9 >= 10 whose 6-month window has closed (intake 8-14 months ago)",
+      "window": "6-month cohort",
+      "target": 0.35,
+      "flag": 0.25,
+      "direction": "higher",
+      "min_n": 8,
+      "fmt": "pct"
+    },
+    {
+      "id": "safety_response",
+      "domain": "Clinical outcomes",
+      "label": "Same-day safety plan after positive risk screen",
+      "definition": "Share of positive suicide-risk screens followed by a safety plan or escalation the same day.",
+      "numerator": "Positive screens with a safety plan / escalation on the same day",
+      "denominator": "Positive risk screens in the last 12 months",
+      "window": "Last 12 months",
+      "target": 1.0,
+      "flag": 0.95,
+      "direction": "higher",
+      "min_n": 1,
+      "fmt": "pct",
+      "safety": true
+    },
+    {
+      "id": "pcp_referral",
+      "domain": "Clinical outcomes",
+      "label": "PCP referral within 7 days",
+      "definition": "Share of physical health concerns raised in therapy that were referred to the patient's primary care provider within 7 days.",
+      "numerator": "Concerns referred to PCP within 7 days",
+      "denominator": "Physical health concerns identified in the last 12 months (7+ days ago)",
+      "window": "Last 12 months",
+      "target": 0.9,
+      "flag": 0.75,
+      "direction": "higher",
+      "min_n": 4,
+      "fmt": "pct",
+      "safety": true
+    },
+    {
+      "id": "early_dropout",
+      "domain": "Clinical outcomes",
+      "label": "Early dropout",
+      "definition": "Share of new patients who attended 2 or fewer sessions and then stopped coming (no visit in 30+ days, not a planned discharge).",
+      "numerator": "New patients with <= 2 attended sessions and no visit in 30+ days",
+      "denominator": "Patients with an intake in the last 12 months (intake 45+ days ago)",
+      "window": "Intakes, last 12 months",
+      "target": 0.15,
+      "flag": 0.25,
+      "direction": "lower",
+      "min_n": 8,
+      "fmt": "pct"
+    },
+    {
+      "id": "provider_cancel",
+      "domain": "Access",
+      "label": "Provider late cancels / no-shows",
+      "definition": "Share of scheduled sessions the therapist cancelled late (<24h) or missed.",
+      "numerator": "Provider late cancels + provider no-shows",
+      "denominator": "Scheduled sessions, last 90 days",
+      "window": "Last 90 days",
+      "target": 0.03,
+      "flag": 0.06,
+      "direction": "lower",
+      "min_n": 20,
+      "fmt": "pct"
+    },
+    {
+      "id": "provider_resched",
+      "domain": "Access",
+      "label": "Provider reschedules",
+      "definition": "Share of scheduled sessions the therapist moved to another time.",
+      "numerator": "Provider-initiated reschedules",
+      "denominator": "Scheduled sessions, last 90 days",
+      "window": "Last 90 days",
+      "target": 0.05,
+      "flag": 0.1,
+      "direction": "lower",
+      "min_n": 20,
+      "fmt": "pct"
+    },
+    {
+      "id": "available_hours",
+      "domain": "Access",
+      "label": "Available hours / week",
+      "definition": "Bookable clinical hours the therapist offers each week. Shown for capacity planning; compared to their contracted clinical hours.",
+      "numerator": "Open clinical hours in the schedule",
+      "denominator": "",
+      "window": "Current",
+      "target": null,
+      "flag": null,
+      "direction": "context",
+      "min_n": 0,
+      "fmt": "hours"
+    },
+    {
+      "id": "notes_48h",
+      "domain": "Documentation",
+      "label": "Notes signed within 48 hours",
+      "definition": "Share of attended sessions with the progress note signed within 48 hours.",
+      "numerator": "Notes signed <= 48h after the session",
+      "denominator": "Attended sessions, last 90 days (2+ days ago)",
+      "window": "Last 90 days",
+      "target": 0.9,
+      "flag": 0.75,
+      "direction": "higher",
+      "min_n": 20,
+      "fmt": "pct"
+    },
+    {
+      "id": "claims_first_pass",
+      "domain": "Documentation",
+      "label": "Claims accepted first pass",
+      "definition": "Share of claims accepted by the payer on first submission (no denial or rework).",
+      "numerator": "Claims accepted on first submission",
+      "denominator": "Claims submitted, last 90 days",
+      "window": "Last 90 days",
+      "target": 0.95,
+      "flag": 0.9,
+      "direction": "higher",
+      "min_n": 20,
+      "fmt": "pct"
+    }
+  ],
+  "provider_alerts": {
+    "notes_48h_min": 0.9,
+    "claims_first_pass_min": 0.9,
+    "provider_cancels_last_week": 2,
+    "provider_cancel_rate_4wk_max": 0.06,
+    "min_sessions": 10,
+    "new_hire_ramp_days": 90
+  },
+  "notification_rules": [
+    {
+      "tier": "Urgent",
+      "cadence": "Daily (same day for risk screens)",
+      "category": "Patient safety",
+      "trigger": "Positive suicide-risk screen with no safety plan documented the same day",
+      "action": "Same-day check-in with the patient; complete and document a safety plan",
+      "owner": "Lead + therapist"
+    },
+    {
+      "tier": "Urgent",
+      "cadence": "Daily",
+      "category": "Patient safety",
+      "trigger": "Elder abuse / neglect concern with no safety assessment or APS report by the next day",
+      "action": "Confirm safety; document assessment; report to Adult Protective Services where required",
+      "owner": "Lead + therapist"
+    },
+    {
+      "tier": "Urgent",
+      "cadence": "Daily",
+      "category": "Physical health escalation",
+      "trigger": "Fall, confusion or medication reaction not sent to the PCP after 1 day; any other physical health concern after 7 days",
+      "action": "Send to the PCP today",
+      "owner": "Therapist (lead verifies)"
+    },
+    {
+      "tier": "High",
+      "cadence": "Monday digest",
+      "category": "Rev cycle",
+      "trigger": "Notes signed within 48h < 90% or claims accepted first pass < 90% (trailing 4 weeks)",
+      "action": "Connect with the provider this week to get back on track",
+      "owner": "Lead"
+    },
+    {
+      "tier": "High",
+      "cadence": "Monday digest",
+      "category": "Access",
+      "trigger": "Hours offered for next week below contracted hours; or 2+ provider late cancels / no-shows in the last week, or > 6% over the last 4 weeks",
+      "action": "Connect with the provider this week to get back on track",
+      "owner": "Lead"
+    },
+    {
+      "tier": "Review",
+      "cadence": "Monday digest",
+      "category": "Patient review",
+      "trigger": "PHQ-9 up 5+ points into the 10+ range; not improving after 12+ weeks; safety plan completed late; disengaged 30+ days; PHQ-9 overdue; intake incomplete",
+      "action": "Supervision agenda (therapist) or outreach (care coordination)",
+      "owner": "Therapist / care coordination"
+    },
+    {
+      "tier": "Review",
+      "cadence": "Monday digest (monthly close)",
+      "category": "Scorecard",
+      "trigger": "A scorecard metric newly fell below its flag line at the latest month-end",
+      "action": "Performance conversation",
+      "owner": "Lead"
+    },
+    {
+      "tier": "Recognition",
+      "cadence": "Monday digest",
+      "category": "Shoutouts",
+      "trigger": "Goal newly met and sustained for two month-ends (metric or overall rating); patients newly in remission",
+      "action": "Give a shoutout",
+      "owner": "Lead"
+    }
+  ],
+  "global_rules": [
+    "Bundled across the whole pod: one full-state digest every Monday, plus a daily list for urgent escalations only.",
+    "Every open item shows how many days it has been open. Urgent items open more than 48 hours escalate to the clinical director.",
+    "Each item has an owner, so the lead only acts on what needs the lead.",
+    "The lead closes each item with a short outcome note, which builds an audit trail.",
+    "New hires (first 90 days) get no provider performance alerts; patient-safety alerts always fire.",
+    "Hospital and ED discharges are not alerted on: Sailor has no reliable discharge signal today. First addition once an ADT feed is in place."
+  ]
+}
