@@ -53,36 +53,43 @@ function UrgentList({ summary, names, T }: { summary: any; names: Record<string,
         </div>
         <div className="right urgent-summary">
           <span className="chip c-urgent">{open.length} open</span>
+          {done.length > 0 && <span className="chip c-meets">{done.length} resolved</span>}
           {escN > 0 && <span className="chip c-esc">{escN} escalated to clinical director</span>}
           {newN > 0 && <span className="chip c-new">{newN} new since Monday</span>}
         </div>
       </div>
       <div className="alist">
-        {!open.length && <div className="empty">No open urgent escalations.</div>}
-        {open.map((f: any) => {
-          const c = URGENT_CAT[f.flag], k = resolutionKey(f);
+        {!items.length && <div className="empty">No urgent escalations today.</div>}
+        {items.map((f: any) => {
+          const c = URGENT_CAT[f.flag], k = resolutionKey(f), r = resolved[k];
+          const when = r ? new Date(r.at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "";
           return (
-            <div className="arow" key={k}>
-              <div className="ic" aria-hidden="true"><Icon name={c.icon} /></div>
+            <div className={`arow${r ? " is-resolved" : ""}`} key={k}>
+              <div className={`ic${r ? " ok" : ""}`} aria-hidden="true">{r ? "✓" : <Icon name={c.icon} />}</div>
               <div className="main">
                 <div className="line1">
                   <span className="cat">{c.label}</span>
                   <Link className="linkish" href={`/patients/${f.patient_id}`}>{names[f.patient_id]} · {f.patient_id}</Link>
                   <span className="who">{T[f.therapist_id].name}</span>
-                  {f.new_since_monday && <span className="chip c-new">New since Monday</span>}
-                  {f.escalated && <span className="chip c-esc">Escalated · open &gt; 48h</span>}
+                  {r && <span className="chip c-meets">✓ Resolved {when}</span>}
+                  {!r && f.new_since_monday && <span className="chip c-new">New since Monday</span>}
+                  {!r && f.escalated && <span className="chip c-esc">Escalated · open &gt; 48h</span>}
                 </div>
                 <div className="detail">{f.detail}</div>
-                <div className="action"><b>Next step:</b> {f.recommended_action} <span className="muted">· Owner: {f.owner}</span></div>
+                {r
+                  ? <div className="action"><b>Resolution:</b> {r.note || "No note added."}</div>
+                  : <div className="action"><b>Next step:</b> {f.recommended_action} <span className="muted">· Owner: {f.owner}</span></div>}
               </div>
               <div className="side">
-                <span className="days">{f.days_open === 0 ? "Opened today" : `Open ${f.days_open} ${f.days_open === 1 ? "day" : "days"}`}</span>
+                {!r && <span className="days">{f.days_open === 0 ? "Opened today" : `Open ${f.days_open} ${f.days_open === 1 ? "day" : "days"}`}</span>}
                 <div className="btns">
                   <Link className="btn small" href={`/patients/${f.patient_id}`}>Open chart</Link>
-                  <button className="btn small primary" onClick={() => { setOpenForm(openForm === k ? null : k); setNote(""); }}>Resolve</button>
+                  {r
+                    ? <button className="btn small" onClick={() => { reopen(k); toast("Reopened"); }}>Reopen</button>
+                    : <button className="btn small primary" onClick={() => { setOpenForm(openForm === k ? null : k); setNote(""); }}>Resolve</button>}
                 </div>
               </div>
-              {openForm === k && (
+              {!r && openForm === k && (
                 <form className="resolve-form" onSubmit={(e) => {
                   e.preventDefault();
                   resolve(k, note.trim());
@@ -101,24 +108,6 @@ function UrgentList({ summary, names, T }: { summary: any; names: Record<string,
           );
         })}
       </div>
-      {done.length > 0 && (
-        <details className="resolved">
-          <summary>Resolved ({done.length})</summary>
-          {done.map((f: any) => {
-            const r = resolved[resolutionKey(f)];
-            return (
-              <div className="rrow" key={resolutionKey(f)}>
-                <div>
-                  <b>{URGENT_CAT[f.flag].label}</b> · {names[f.patient_id]} · {T[f.therapist_id].name}
-                  <div className="note">{r.note || "No note"} <span className="muted">· resolved {new Date(r.at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</span></div>
-                </div>
-                <button className="btn small" onClick={() => { reopen(resolutionKey(f)); toast("Reopened"); }}>Reopen</button>
-              </div>
-            );
-          })}
-          <p className="note">Demo: resolutions are saved in this browser. In production they go to the shared database with the user’s name.</p>
-        </details>
-      )}
       {node}
     </section>
   );
@@ -143,7 +132,7 @@ function Kpis({ summary }: { summary: any }) {
   return (
     <section className="block" id="kpis">
       <div className="sec-head">
-        <div><div className="eyebrow">Pod performance</div><h2>Pod at a glance</h2></div>
+        <div><div className="eyebrow">Pod performance</div><h2>Aggregate pod performance by KPI</h2></div>
         <div className="right"><span className="sub">{summary.therapists.length} therapists · {pm.active_caseload.value} active patients · avg intake PHQ-9 {pm.avg_baseline_phq.value}</span></div>
       </div>
       {DOMAINS.map((dn) => (

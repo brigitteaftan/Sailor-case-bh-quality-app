@@ -347,3 +347,6 @@ a.linkish { text-decoration: none; }
 .kpi-group .kpis { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
 .resolve-form.wide { grid-column: 1 / -1; }
 .drow .meta .btn { margin-top: 2px; }
+.arow.is-resolved { background: var(--panel-2); }
+.arow.is-resolved .detail, .arow.is-resolved .cat { color: var(--ink-2); }
+.arow .ic.ok { background: var(--good-bg); color: var(--good); font-weight: 700; }
