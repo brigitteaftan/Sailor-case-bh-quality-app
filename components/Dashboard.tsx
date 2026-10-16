@@ -348,6 +348,10 @@ function Digest({ summary, names, T }: { summary: any; names: Record<string, str
         ))}
         {!rows.length && <div className="empty">Nothing matches these filters.</div>}
       </div>
+      <p className="note">
+        New since last Monday, plus anything High priority.
+        {dg.review_backlog != null && dg.review_backlog > review.length && <> {dg.review_backlog - review.length} ongoing items stay on each therapist’s page for their 1:1s.</>}
+      </p>
     </>);
   } else if (tab === "scorecard") {
     body = (<>

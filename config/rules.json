@@ -256,7 +256,7 @@
       "tier": "Review",
       "cadence": "Monday digest",
       "category": "Patient review",
-      "trigger": "PHQ-9 up 5+ points into the 10+ range; not improving after 12+ weeks; safety plan completed late; disengaged 30+ days; PHQ-9 overdue; intake incomplete",
+      "trigger": "Newly flagged since last Monday: PHQ-9 up 5+ points into the 10+ range; not improving after 12+ weeks; safety plan completed late; disengaged 30+ days; PHQ-9 overdue; intake incomplete. Ongoing items stay on each therapist's page for 1:1s.",
       "action": "Supervision agenda (therapist) or outreach (care coordination)",
       "owner": "Therapist / care coordination"
     },

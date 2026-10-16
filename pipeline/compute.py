@@ -303,7 +303,7 @@ def build_case_flags(as_of):
     active = P[(P.intake_date <= as_of) & ((P.discharge_date.isna()) | (P.discharge_date > as_of))]
     active_ids = set(active.patient_id)
 
-    def add(pid, ftype, priority, detail, action, since, owner="Therapist"):
+    def add(pid, ftype, priority, detail, action, since, owner="Therapist", flagged_on=None):
         tid = P.loc[P.patient_id == pid, "therapist_id"].iloc[0]
         days_open = int((as_of - pd.Timestamp(since)).days)
         urgent = priority == "Urgent"
@@ -312,6 +312,7 @@ def build_case_flags(as_of):
                           cadence="Daily" if urgent else "Monday digest", owner=owner, detail=detail,
                           recommended_action=action, since=pd.Timestamp(since).date().isoformat(),
                           days_open=days_open, escalated=escalated,
+                          flagged_on=pd.Timestamp(flagged_on if flagged_on is not None else since).date().isoformat(),
                           escalation="Open > 48h: escalate to clinical director" if escalated else None))
 
     def res_by(r):
@@ -334,7 +335,7 @@ def build_case_flags(as_of):
                 add(r.patient_id, "Safety plan completed late", "Review",
                     f"Positive risk screen on {r.date.date():%b %d}; safety plan not done until {r.resolved_date.date():%b %d}.",
                     "Discuss in supervision: same-day safety planning is the standard. Confirm the plan is current.",
-                    r.date)
+                    r.date, flagged_on=rd)
 
     # 2. elder abuse / neglect concern without documented safety assessment / APS report
     ea = E[(E.type == "Elder abuse / neglect concern") & (E.date <= as_of - pd.Timedelta(days=1)) &
@@ -366,7 +367,7 @@ def build_case_flags(as_of):
                 add(pid, "Not improving after 12+ weeks", "Review",
                     f"PHQ-9 {b.score} at intake, {last.score} now after {int(weeks)} weeks.",
                     "Bring to case consultation: revisit the care plan and modality, check engagement, and consider a PCP or psychiatry referral for medication evaluation.",
-                    last.date)
+                    last.date, flagged_on=ps[ps.date >= pinfo.intake_date + pd.Timedelta(days=84)].date.min())
         # 5. disengaged
         if pid in last_att.index:
             gap = (as_of - last_att[pid]).days
@@ -374,7 +375,7 @@ def build_case_flags(as_of):
                 add(pid, "Disengaged: no visit in 30+ days", "Review",
                     f"Last attended session {last_att[pid].date():%b %d} ({gap} days ago); {n_att[pid]} sessions total.",
                     "Care coordinator outreach this week: check for barriers (video or phone setup, hearing, health), contact the caregiver if consented, and offer phone sessions.",
-                    last_att[pid], owner="Care coordination")
+                    last_att[pid], owner="Care coordination", flagged_on=last_att[pid] + pd.Timedelta(days=30))
         # 6. overdue outcome measure
         if pinfo.intake_date <= as_of - pd.Timedelta(days=60) and pid in last_att.index and \
                 (as_of - last_att[pid]).days < 30:
@@ -383,7 +384,7 @@ def build_case_flags(as_of):
                 add(pid, "Outcome measure overdue", "Routine",
                     "No PHQ-9 in the last 60 days." if lp is not None else "No PHQ-9 on file.",
                     "Administer PHQ-9 at the next session.",
-                    lp if lp is not None else pinfo.intake_date)
+                    lp if lp is not None else pinfo.intake_date, flagged_on=(lp if lp is not None else pinfo.intake_date) + pd.Timedelta(days=60))
         # 7. intake incomplete
         if n_att.get(pid, 0) >= 2 and pinfo.intake_date <= as_of - pd.Timedelta(days=14):
             pe = E[(E.patient_id == pid) & (E.type == "Care plan") & (E.date <= as_of)]
@@ -575,8 +576,13 @@ def build_notifications(daily_date, monday_date, snap):
         compare_dates=snap["dates"],
         open_urgent=[f for f in monday_flags if f["priority"] == "Urgent"],
         provider_followups=prov,
-        patient_review=sorted([f for f in monday_flags if f["priority"] != "Urgent"],
+        # The lead's weekly list: items newly flagged since last Monday, plus anything High priority.
+        # Ongoing items stay on each therapist's page for their 1:1s.
+        patient_review=sorted([f for f in monday_flags if f["priority"] != "Urgent" and (
+                                  f["priority"] == "High" or
+                                  pd.Timestamp(f["flagged_on"]) > pd.Timestamp(monday_date) - pd.Timedelta(days=7))],
                               key=lambda f: (f["therapist_id"], review_order[f["priority"]], -f["days_open"])),
+        review_backlog=sum(1 for f in monday_flags if f["priority"] != "Urgent"),
         scorecard_changes=sc_alerts,
         shoutouts=sc_shout + patient_shout,
         suppressed=suppressed,
