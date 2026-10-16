@@ -78,7 +78,9 @@ npm run pipeline:mock && npm run pipeline
 
 1. Import this repository in Vercel (**Add New → Project**). No settings to change.
 2. Every push to `main` redeploys. The daily GitHub Action commits fresh results each
-   weekday morning, which triggers a redeploy.
+   weekday morning, which triggers a redeploy. In demo mode it also regenerates the mock
+   exports so the dashboard's "today" is the real date (same patients and stories; only
+   the dates move).
 3. Optional: add a `SLACK_WEBHOOK_URL` repository secret and an `APP_URL` repository
    variable to post notifications to Slack.
 

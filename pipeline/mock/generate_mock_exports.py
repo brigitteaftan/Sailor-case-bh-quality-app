@@ -580,28 +580,51 @@ sessions[:] = [s for s in sessions if s["date"] >= HIST_START.isoformat()]
 HOSPITAL_TYPES = {"Psychiatric ED visit", "Psychiatric hospitalization", "Medical hospitalization"}
 
 
+def target_as_of():
+    """The 'today' of the export: MOCK_AS_OF (YYYY-MM-DD) if set, else today in New York."""
+    v = os.environ.get("MOCK_AS_OF")
+    if v:
+        return date.fromisoformat(v)
+    try:
+        from zoneinfo import ZoneInfo
+        return datetime.now(ZoneInfo("America/New_York")).date()
+    except Exception:
+        return date.today()
+
+
 def write_exports():
+    """Write the exports, shifted so the simulation's 'today' lands on the real date.
+
+    The pod is always simulated around a fixed base date (AS_OF), so the patients,
+    therapists and their stories never change. Every date is then moved by the same
+    number of days, which keeps the demo current without re-rolling the data.
+    """
     os.makedirs(RAW_DIR, exist_ok=True)
-    pd.DataFrame([dict(therapist_id=t["id"], name=t["name"], credential=t["credential"], hire_date=t["hire_date"],
+    today = target_as_of()
+    delta = timedelta(days=(today - AS_OF).days)
+
+    def sd(v):   # shift an ISO date string
+        return (date.fromisoformat(v) + delta).isoformat() if isinstance(v, str) and v else v
+
+    def sdt(v):  # shift an ISO datetime string (YYYY-MM-DDTHH:MM)
+        return (datetime.fromisoformat(v) + delta).isoformat(timespec="minutes") if isinstance(v, str) and v else v
+
+    pd.DataFrame([dict(therapist_id=t["id"], name=t["name"], credential=t["credential"], hire_date=sd(t["hire_date"]),
                        contracted_hours=tparams(t, AS_OF)["contracted"]) for t in THERAPISTS]) \
         .to_csv(os.path.join(RAW_DIR, "therapists.csv"), index=False)
 
     # weekly bookable hours each therapist opened in the scheduling system (incl. next week)
     rows = []
-    wk = HIST_START - timedelta(days=HIST_START.weekday())
-    last = AS_OF - timedelta(days=AS_OF.weekday()) + timedelta(days=7)
+    start = HIST_START + delta
+    wk = start - timedelta(days=start.weekday())
+    last = today - timedelta(days=today.weekday()) + timedelta(days=7)
     while wk <= last:
         for t in THERAPISTS:
-            if date.fromisoformat(t["hire_date"]) <= wk + timedelta(days=6):
-                rows.append(dict(therapist_id=t["id"], week_start=wk.isoformat(), offered_hours=tparams(t, wk)["capacity"]))
+            if date.fromisoformat(t["hire_date"]) + delta <= wk + timedelta(days=6):
+                rows.append(dict(therapist_id=t["id"], week_start=wk.isoformat(), offered_hours=tparams(t, wk - delta)["capacity"]))
         wk += timedelta(days=7)
     pd.DataFrame(rows).to_csv(os.path.join(RAW_DIR, "schedule.csv"), index=False)
 
-    pd.DataFrame(patients).drop(columns=["_type"]).to_csv(os.path.join(RAW_DIR, "patients.csv"), index=False)
-    pd.DataFrame(sessions).to_csv(os.path.join(RAW_DIR, "sessions.csv"), index=False)
-    pd.DataFrame(assessments).to_csv(os.path.join(RAW_DIR, "assessments.csv"), index=False)
-    # Sailor has no reliable signal for hospital / ED stays (no ADT feed), so those
-    # events never appear in an export. The simulation still uses them (care gaps).
     # Realism pass: in practice an urgent item doesn't sit open for weeks -- once it
     # escalates, it gets worked. Items older than 10 days are closed late (still a
     # miss on the therapist's scorecard), leaving a realistic handful open today.
@@ -616,12 +639,37 @@ def write_exports():
                 lo, hi, label = urgent_types[e["type"]]
                 e["resolved_date"] = min(AS_OF, d + timedelta(days=int(late_rng.integers(lo, hi + 1)))).isoformat()
                 e["resolution"] = label
+
+    pts = pd.DataFrame(patients).drop(columns=["_type"])
+    for c in ["intake_date", "discharge_date"]:
+        pts[c] = pts[c].map(sd)
+    pts.to_csv(os.path.join(RAW_DIR, "patients.csv"), index=False)
+
+    ses = pd.DataFrame(sessions)
+    ses["date"] = ses["date"].map(sd)
+    for c in ["start", "note_signed_at"]:
+        ses[c] = ses[c].map(sdt)
+    ses.to_csv(os.path.join(RAW_DIR, "sessions.csv"), index=False)
+
+    asm = pd.DataFrame(assessments)
+    asm["date"] = asm["date"].map(sd)
+    asm.to_csv(os.path.join(RAW_DIR, "assessments.csv"), index=False)
+
+    # Sailor has no reliable signal for hospital / ED stays (no ADT feed), so those
+    # events never appear in an export. The simulation still uses them (care gaps).
     ev = pd.DataFrame([e for e in care_events if e["type"] not in HOSPITAL_TYPES])
-    ev.drop(columns=[c for c in ["discharge_date"] if c in ev.columns]).to_csv(os.path.join(RAW_DIR, "care_events.csv"), index=False)
-    pd.DataFrame(claims).to_csv(os.path.join(RAW_DIR, "claims.csv"), index=False)
-    json.dump(dict(as_of=AS_OF.isoformat(), source="mock", note="Synthetic data only. No real patients or providers."),
+    ev = ev.drop(columns=[c for c in ["discharge_date"] if c in ev.columns])
+    for c in ["date", "resolved_date"]:
+        ev[c] = ev[c].map(sd)
+    ev.to_csv(os.path.join(RAW_DIR, "care_events.csv"), index=False)
+
+    clm = pd.DataFrame(claims)
+    clm["submitted"] = clm["submitted"].map(sd)
+    clm.to_csv(os.path.join(RAW_DIR, "claims.csv"), index=False)
+
+    json.dump(dict(as_of=today.isoformat(), source="mock", note="Synthetic data only. No real patients or providers."),
               open(os.path.join(RAW_DIR, "export_meta.json"), "w"), indent=2)
-    print(f"wrote mock exports to {RAW_DIR}: {len(patients)} patients, {len(sessions)} sessions")
+    print(f"wrote mock exports for {today} to {RAW_DIR}: {len(patients)} patients, {len(sessions)} sessions")
 
 
 if __name__ == "__main__":

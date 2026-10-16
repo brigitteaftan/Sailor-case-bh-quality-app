@@ -27,8 +27,16 @@ jobs:
       # In production this step pulls the morning's EHR, scheduling and billing
       # exports (SFTP, S3 or an API) into data/raw/, matching pipeline/SCHEMA.md.
       # The demo ships fixed mock exports, so there is nothing to fetch.
+      # Demo mode: regenerate the mock exports so the demo's "today" is the real date.
+      # (Same synthetic patients and stories every day; only the dates move.)
       - name: Load today's exports
-        run: echo "Using exports in data/raw (source=$(python3 -c "import json;print(json.load(open('data/raw/export_meta.json'))['source'])"))"
+        run: |
+          src=$(python3 -c "import json;print(json.load(open('data/raw/export_meta.json'))['source'])")
+          if [ "$src" = "mock" ]; then
+            python3 pipeline/mock/generate_mock_exports.py
+          else
+            echo "Using exports in data/raw (source=$src)"
+          fi
 
       - name: Compute scorecards, flags and notifications
         run: python3 pipeline/compute.py
@@ -43,7 +51,7 @@ jobs:
         run: |
           git config user.name "daily-refresh-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add data/computed
+          git add data/raw data/computed
           if git diff --cached --quiet; then
             echo "No changes today."
           else
