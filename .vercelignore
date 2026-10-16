@@ -1,0 +1,6 @@
+# The Python pipeline runs in GitHub Actions (.github/workflows/daily.yml), not on Vercel.
+# The web app only needs its computed output in data/computed/.
+pipeline/
+data/raw/
+data/computed/outbox/
+data/computed/case_flags.csv
