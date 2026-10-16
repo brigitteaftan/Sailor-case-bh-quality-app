@@ -4,7 +4,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { defaultThresholds, type Thresholds } from "@/lib/rating";
-import { store } from "@/lib/storage";
+import { store, type Resolution } from "@/lib/storage";
 
 type ThCtx = {
   th: Thresholds;
@@ -15,6 +15,9 @@ type ThCtx = {
   defaults: Thresholds;
 };
 const ThresholdsContext = createContext<ThCtx | null>(null);
+
+type ResCtx = { resolved: Record<string, Resolution>; resolve: (k: string, note: string) => void; reopen: (k: string) => void };
+const ResolutionsContext = createContext<ResCtx | null>(null);
 
 type TipState = { content: ReactNode; x: number; y: number } | null;
 const TipContext = createContext<{ show: (c: ReactNode, x: number, y: number) => void; hide: () => void } | null>(null);
@@ -42,6 +45,16 @@ export function Providers({ children }: { children: ReactNode }) {
     changed: JSON.stringify(th) !== JSON.stringify(defaults),
   };
 
+  // Resolved items (urgent escalations and digest tasks) with their audit notes.
+  // Demo: saved in this browser. Production: a shared table keyed the same way.
+  const [resolved, setResolved] = useState<Record<string, Resolution>>({});
+  useEffect(() => setResolved(store.get("resolved", {})), []);
+  const res: ResCtx = {
+    resolved,
+    resolve: (k, note) => setResolved((cur) => { const n = { ...cur, [k]: { note, at: new Date().toISOString() } }; store.set("resolved", n); return n; }),
+    reopen: (k) => setResolved((cur) => { const n = { ...cur }; delete n[k]; store.set("resolved", n); return n; }),
+  };
+
   const [tip, setTip] = useState<TipState>(null);
   const tipRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState({ left: -9999, top: -9999 });
@@ -61,6 +74,7 @@ export function Providers({ children }: { children: ReactNode }) {
 
   return (
     <ThresholdsContext.Provider value={value}>
+     <ResolutionsContext.Provider value={res}>
       <TipContext.Provider value={useMemo(() => ({ show, hide }), [show, hide])}>
         {children}
         {tip && (
@@ -69,12 +83,14 @@ export function Providers({ children }: { children: ReactNode }) {
           </div>
         )}
       </TipContext.Provider>
+     </ResolutionsContext.Provider>
     </ThresholdsContext.Provider>
   );
 }
 
 export const useThresholds = () => useContext(ThresholdsContext)!;
 export const useTip = () => useContext(TipContext)!;
+export const useResolutions = () => useContext(ResolutionsContext)!;
 
 /** Small transient confirmation message. */
 export function useToast() {

@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";
-import { useThresholds, useToast } from "./Providers";
+import { useResolutions, useThresholds, useToast } from "./Providers";
+import { resolutionKey } from "@/lib/storage";
 import { Spark } from "./Charts";
 import { Pill, PriorityChip, StatusChip } from "./ui";
 import { DOMAINS, MDEF, SCORED, agendaFor, pctS, rateTherapists, targetText } from "@/lib/rating";
@@ -18,6 +19,7 @@ export default function TherapistView({ summary, tid, patients, names }: {
   const { th } = useThresholds();
   const router = useRouter();
   const { toast, node } = useToast();
+  const { resolved } = useResolutions();
   const r = useMemo(() => rateTherapists(th, summary.therapists).find((x) => x.t.id === tid)!, [th, summary, tid]);
   const t = r.t, m = t.metrics, sig = summary.notifications.provider_signals[tid];
   const flags = summary.case_flags.filter((f: any) => f.therapist_id === tid)
@@ -70,8 +72,8 @@ export default function TherapistView({ summary, tid, patients, names }: {
         {flags.length ? (
           <div className="dlist" style={{ border: 0 }}>
             {flags.map((f: any) => (
-              <div className="drow" key={f.patient_id + f.flag + f.since} style={{ gridTemplateColumns: "90px minmax(0,1fr) auto", paddingInline: 0 }}>
-                <div><PriorityChip p={f.priority} /></div>
+              <div className="drow" key={f.patient_id + f.flag + f.since} style={{ gridTemplateColumns: "90px minmax(0,1fr) auto", paddingInline: 0, opacity: resolved[resolutionKey(f)] ? 0.55 : 1 }}>
+                <div>{resolved[resolutionKey(f)] ? <span className="chip c-meets">✓ Resolved</span> : <PriorityChip p={f.priority} />}</div>
                 <div className="body"><div className="ttl">{f.flag} · <Link className="linkish" href={`/patients/${f.patient_id}`}>{names[f.patient_id]}</Link></div><div className="ink2">{f.detail}</div></div>
                 <div className="meta"><span>{f.owner}</span></div>
               </div>

@@ -5,7 +5,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { useThresholds, useToast } from "./Providers";
+import { useResolutions, useThresholds, useToast } from "./Providers";
 import { Spark } from "./Charts";
 import { Icon, Pill, PriorityChip, StatusChip, URGENT_CAT, shortName } from "./ui";
 import {
@@ -33,12 +33,10 @@ export default function Dashboard({ summary, names }: Props) {
 
 /* ---------------- Today's urgent escalations ---------------- */
 function UrgentList({ summary, names, T }: { summary: any; names: Record<string, string>; T: Record<string, any> }) {
-  const [resolved, setResolved] = useState<Record<string, Resolution>>({});
+  const { resolved, resolve, reopen } = useResolutions();
   const [openForm, setOpenForm] = useState<string | null>(null);
   const [note, setNote] = useState("");
   const { toast, node } = useToast();
-  useEffect(() => setResolved(store.get("resolved", {})), []);
-  const save = (next: Record<string, Resolution>) => { setResolved(next); store.set("resolved", next); };
 
   const items = [...summary.notifications.daily.items].sort(
     (a: any, b: any) => URGENT_CAT[a.flag].rank - URGENT_CAT[b.flag].rank || b.days_open - a.days_open);
@@ -87,7 +85,7 @@ function UrgentList({ summary, names, T }: { summary: any; names: Record<string,
               {openForm === k && (
                 <form className="resolve-form" onSubmit={(e) => {
                   e.preventDefault();
-                  save({ ...resolved, [k]: { note: note.trim(), at: new Date().toISOString() } });
+                  resolve(k, note.trim());
                   setOpenForm(null); toast("Marked resolved");
                 }}>
                   <label htmlFor={`note-${k}`} className="ink2" style={{ fontSize: 13, fontWeight: 600 }}>What happened? This note goes in the audit trail.</label>
@@ -114,7 +112,7 @@ function UrgentList({ summary, names, T }: { summary: any; names: Record<string,
                   <b>{URGENT_CAT[f.flag].label}</b> · {names[f.patient_id]} · {T[f.therapist_id].name}
                   <div className="note">{r.note || "No note"} <span className="muted">· resolved {new Date(r.at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</span></div>
                 </div>
-                <button className="btn small" onClick={() => { const n = { ...resolved }; delete n[resolutionKey(f)]; save(n); toast("Reopened"); }}>Reopen</button>
+                <button className="btn small" onClick={() => { reopen(resolutionKey(f)); toast("Reopened"); }}>Reopen</button>
               </div>
             );
           })}
@@ -267,66 +265,160 @@ function Scorecard({ summary, rated }: { summary: any; rated: Rated[] }) {
 
 /* ---------------- Monday digest ---------------- */
 type DTab = "urgent" | "provider" | "review" | "scorecard" | "shout";
+type Task = {
+  key: string; group?: string; groupHead?: React.ReactNode;
+  who: React.ReactNode; body: React.ReactNode; meta: React.ReactNode; title: string;
+  action: string; prompt: string; placeholder: string; doneVerb: string;
+};
+
+function TaskList({ tasks, empty }: { tasks: Task[]; empty: string }) {
+  const { resolved, resolve, reopen } = useResolutions();
+  const [openForm, setOpenForm] = useState<string | null>(null);
+  const [note, setNote] = useState("");
+  const { toast, node } = useToast();
+  const open = tasks.filter((t) => !resolved[t.key]);
+  const done = tasks.filter((t) => resolved[t.key]);
+  let lastGroup: string | undefined;
+  return (
+    <>
+      <div className="dlist">
+        {open.map((t) => {
+          const head = t.group && t.group !== lastGroup ? t.groupHead : null;
+          lastGroup = t.group;
+          return (
+            <div key={t.key}>
+              {head}
+              <div className="drow">
+                <div className="who">{t.who}</div>
+                <div className="body">{t.body}</div>
+                <div className="meta">
+                  {t.meta}
+                  <button className="btn small primary" onClick={() => { setOpenForm(openForm === t.key ? null : t.key); setNote(""); }}>{t.action}</button>
+                </div>
+                {openForm === t.key && (
+                  <form className="resolve-form wide" onSubmit={(e) => { e.preventDefault(); resolve(t.key, note.trim()); setOpenForm(null); toast(`${t.doneVerb}`); }}>
+                    <label htmlFor={`dn-${t.key}`} className="ink2" style={{ fontSize: 13, fontWeight: 600 }}>{t.prompt}</label>
+                    <textarea id={`dn-${t.key}`} autoFocus value={note} onChange={(e) => setNote(e.target.value)} placeholder={t.placeholder} />
+                    <div className="row">
+                      <button type="button" className="btn small" onClick={() => setOpenForm(null)}>Cancel</button>
+                      <button type="submit" className="btn small primary">{t.action}</button>
+                    </div>
+                  </form>
+                )}
+              </div>
+            </div>
+          );
+        })}
+        {!open.length && <div className="empty">{done.length ? "All done for this week." : empty}</div>}
+      </div>
+      {done.length > 0 && (
+        <details className="resolved">
+          <summary>Done this week ({done.length})</summary>
+          {done.map((t) => {
+            const r = resolved[t.key];
+            return (
+              <div className="rrow" key={t.key}>
+                <div>
+                  <b>{t.title}</b>
+                  <div className="note">{r.note || "No note"} <span className="muted">· {t.doneVerb.toLowerCase()} {new Date(r.at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</span></div>
+                </div>
+                <button className="btn small" onClick={() => { reopen(t.key); toast("Reopened"); }}>Reopen</button>
+              </div>
+            );
+          })}
+        </details>
+      )}
+      {node}
+    </>
+  );
+}
+
 function Digest({ summary, names, T }: { summary: any; names: Record<string, string>; T: Record<string, any> }) {
   const { th } = useThresholds();
+  const { resolved } = useResolutions();
   const [tab, setTab] = useState<DTab>("provider");
   const [rvT, setRvT] = useState("all");
   const [rvF, setRvF] = useState("all");
   useEffect(() => setTab(store.get("dtab", "provider")), []);
   const dg = summary.notifications.monday_digest;
+  const wk = dg.date;
   const prov = providerAlerts(th, summary), sc = scorecardChanges(th, summary);
   const shouts = sc.shout.concat(dg.shoutouts.filter((s: any) => s.category === "Patient milestones")
     .map((s: any) => ({ tid: s.therapist_id, kind: "Patient milestones", title: s.title, detail: s.detail, patients: s.patients })));
   const review = dg.patient_review;
-  const tabs: [DTab, string, number][] = [
-    ["urgent", "Open urgent", dg.open_urgent.length], ["provider", "Provider follow-ups", prov.out.length],
-    ["review", "Patient review", review.length], ["scorecard", "Scorecard changes", sc.alerts.length], ["shout", "Shoutouts", shouts.length],
-  ];
-  const pick = (id: DTab) => { setTab(id); store.set("dtab", id); };
   const TName = ({ tid }: { tid: string }) => <Link className="linkish" href={`/therapists/${tid}`}>{shortName(T[tid].name)}</Link>;
   const PLink = ({ id }: { id: string }) => <Link className="linkish" href={`/patients/${id}`}>{names[id] || id}</Link>;
+  const GroupHead = ({ tid, text }: { tid: string; text: string }) => (
+    <div className="groupHead"><Link className="linkish" href={`/therapists/${tid}`}>{T[tid].name}</Link><span className="muted" style={{ fontWeight: 500 }}>· {text}</span></div>
+  );
+
+  // ---- tasks per tab ----
+  const urgentTasks: Task[] = dg.open_urgent.map((f: any) => ({
+    key: resolutionKey(f), title: `${URGENT_CAT[f.flag].label} · ${names[f.patient_id] || f.patient_id} · ${T[f.therapist_id].name}`,
+    who: <TName tid={f.therapist_id} />,
+    body: <><div className="ttl">{URGENT_CAT[f.flag].label} · <PLink id={f.patient_id} /></div><div>{f.detail}</div><div className="ink2">{f.recommended_action}</div></>,
+    meta: <><span className="chip c-urgent">Urgent</span><span>Open {f.days_open} days</span>{f.escalated && <span className="chip c-esc">Escalated</span>}</>,
+    action: "Resolve", doneVerb: "Resolved", prompt: "What happened? This note goes in the audit trail.",
+    placeholder: "e.g. Spoke with therapist; safety plan completed with patient by phone.",
+  }));
+  const provTasks: Task[] = prov.out.map((a) => ({
+    key: `prov|${wk}|${a.tid}|${a.title}`, group: a.tid, groupHead: <GroupHead tid={a.tid} text="Connect this week to get back on track" />,
+    title: `${a.title} · ${T[a.tid].name}`,
+    who: <span className={`chip ${a.cat === "Access" ? "c-review" : "c-high"}`}>{a.cat}</span>,
+    body: <><div className="ttl">{a.title}</div><div className="ink2">{a.detail}</div></>,
+    meta: <span>Owner: Lead</span>,
+    action: "Mark done", doneVerb: "Done", prompt: "What did you agree on? This note goes in the audit trail.",
+    placeholder: "e.g. Met with Hannah Tue; she'll block 15 min after each session for notes. Recheck in 2 weeks.",
+  }));
+  const rvTypes = Array.from(new Set(review.map((f: any) => f.flag))) as string[];
+  const rvRows = review.filter((f: any) => (rvT === "all" || f.therapist_id === rvT) && (rvF === "all" || f.flag === rvF))
+    .sort((a: any, b: any) => a.therapist_id.localeCompare(b.therapist_id));
+  const rvTasks: Task[] = rvRows.map((f: any) => ({
+    key: resolutionKey(f), group: f.therapist_id, groupHead: <GroupHead tid={f.therapist_id} text="for supervision or outreach" />,
+    title: `${f.flag} · ${names[f.patient_id] || f.patient_id} · ${T[f.therapist_id].name}`,
+    who: <PriorityChip p={f.priority} />,
+    body: <><div className="ttl">{f.flag} · <PLink id={f.patient_id} /></div><div>{f.detail}</div><div className="ink2">{f.recommended_action}</div></>,
+    meta: <><span>Owner: {f.owner}</span><span>Since {fmtDate(f.since)}</span></>,
+    action: "Resolve", doneVerb: "Resolved", prompt: "What was done? This note goes in the audit trail.",
+    placeholder: f.owner === "Care coordination" ? "e.g. Care coordinator reached patient; video setup fixed; session booked for Thu." : "e.g. Reviewed in supervision; therapist re-screening at next visit and adjusting the care plan.",
+  }));
+  const scTasks: Task[] = sc.alerts.map((a) => ({
+    key: `sc|${wk}|${a.tid}|${a.title}`, title: `${a.title} · ${T[a.tid].name}`,
+    who: <TName tid={a.tid} />,
+    body: <><div className="ttl">{a.title}</div><div className="ink2">{a.detail}</div><div className="ink2">Next step: performance conversation.</div></>,
+    meta: <><span className="chip c-below">Past flag</span><span>Owner: Lead</span></>,
+    action: "Mark done", doneVerb: "Done", prompt: "What came out of the conversation? This note goes in the audit trail.",
+    placeholder: "e.g. Discussed in 1:1; agreed to protect two reschedule-free days a week. Recheck at next 1:1.",
+  }));
+  const shTasks: Task[] = shouts.map((x) => ({
+    key: `sh|${wk}|${x.tid}|${x.title}`, title: `${x.title} · ${T[x.tid].name}`,
+    who: <TName tid={x.tid} />,
+    body: <><div className="ttl">{x.title}</div><div className="ink2">{x.detail}</div>
+      {x.patients && <div className="ink2">{x.patients.map((p, i) => <span key={p}>{i ? ", " : ""}<PLink id={p} /></span>)}</div>}</>,
+    meta: <span className="chip c-recog">{x.kind}</span>,
+    action: "Mark given", doneVerb: "Given", prompt: "Where did you give it? (optional)",
+    placeholder: "e.g. Called out in Monday team huddle and on Slack.",
+  }));
+  const openCount = (ts: Task[]) => ts.filter((t) => !resolved[t.key]).length;
+  const tabs: [DTab, string, number][] = [
+    ["urgent", "Open urgent", openCount(urgentTasks)], ["provider", "Provider follow-ups", openCount(provTasks)],
+    ["review", "Patient review", openCount(review.map((f: any) => ({ key: resolutionKey(f) }) as Task))],
+    ["scorecard", "Scorecard changes", openCount(scTasks)], ["shout", "Shoutouts", openCount(shTasks)],
+  ];
+  const pick = (id: DTab) => { setTab(id); store.set("dtab", id); };
 
   let body: React.ReactNode = null;
   if (tab === "urgent") {
     body = (<>
-      <div className="dlist">
-        {dg.open_urgent.map((f: any) => (
-          <div className="drow" key={resolutionKey(f)}>
-            <div className="who"><TName tid={f.therapist_id} /></div>
-            <div className="body"><div className="ttl">{URGENT_CAT[f.flag].label} · <PLink id={f.patient_id} /></div><div>{f.detail}</div><div className="ink2">{f.recommended_action}</div></div>
-            <div className="meta"><span className="chip c-urgent">Urgent</span><span>Open {f.days_open} days</span>{f.escalated && <span className="chip c-esc">Escalated</span>}</div>
-          </div>
-        ))}
-        {!dg.open_urgent.length && <div className="empty">No open urgent items on Monday.</div>}
-      </div>
-      <p className="note">Snapshot as of Monday. The live list is at the top of this page.</p>
+      <TaskList tasks={urgentTasks} empty="No open urgent items on Monday." />
+      <p className="note">Snapshot as of Monday. Resolving here also clears it from today’s list at the top of the page.</p>
     </>);
   } else if (tab === "provider") {
-    const byT: Record<string, typeof prov.out> = {};
-    prov.out.forEach((a) => (byT[a.tid] = byT[a.tid] || []).push(a));
     body = (<>
-      <div className="dlist">
-        {Object.keys(byT).map((tid) => (
-          <div key={tid}>
-            <div className="groupHead"><Link className="linkish" href={`/therapists/${tid}`}>{T[tid].name}</Link><span className="muted" style={{ fontWeight: 500 }}>· Connect this week to get back on track</span></div>
-            {byT[tid].map((a) => (
-              <div className="drow" key={a.title}>
-                <div className="who"><span className={`chip ${a.cat === "Access" ? "c-review" : "c-high"}`}>{a.cat}</span></div>
-                <div className="body"><div className="ttl">{a.title}</div><div className="ink2">{a.detail}</div></div>
-                <div className="meta"><span>Owner: Lead</span></div>
-              </div>
-            ))}
-          </div>
-        ))}
-        {!prov.out.length && <div className="empty">No provider follow-ups at these thresholds.</div>}
-      </div>
+      <TaskList tasks={provTasks} empty="No provider follow-ups at these thresholds." />
       {prov.suppressed.map((s) => <p className="note" key={s.tid}>{T[s.tid].name}: {s.reason}</p>)}
     </>);
   } else if (tab === "review") {
-    const types = Array.from(new Set(review.map((f: any) => f.flag))) as string[];
-    const rows = review.filter((f: any) => (rvT === "all" || f.therapist_id === rvT) && (rvF === "all" || f.flag === rvF));
-    const byT: Record<string, any[]> = {};
-    rows.forEach((f: any) => (byT[f.therapist_id] = byT[f.therapist_id] || []).push(f));
     body = (<>
       <div className="filters">
         <label htmlFor="rvT" className="ink2">Therapist</label>
@@ -337,25 +429,11 @@ function Digest({ summary, names, T }: { summary: any; names: Record<string, str
         <label htmlFor="rvF" className="ink2">Type</label>
         <select className="sel" id="rvF" value={rvF} onChange={(e) => setRvF(e.target.value)}>
           <option value="all">All types</option>
-          {types.map((f) => <option key={f} value={f}>{f}</option>)}
+          {rvTypes.map((f) => <option key={f} value={f}>{f}</option>)}
         </select>
-        <span className="muted">{rows.length} items</span>
+        <span className="muted">{openCount(rvTasks)} open</span>
       </div>
-      <div className="dlist">
-        {Object.keys(byT).sort().map((tid) => (
-          <div key={tid}>
-            <div className="groupHead"><Link className="linkish" href={`/therapists/${tid}`}>{T[tid].name}</Link><span className="muted" style={{ fontWeight: 500 }}>· {byT[tid].length} for supervision or outreach</span></div>
-            {byT[tid].map((f) => (
-              <div className="drow" key={resolutionKey(f)}>
-                <div className="who"><PriorityChip p={f.priority} /></div>
-                <div className="body"><div className="ttl">{f.flag} · <PLink id={f.patient_id} /></div><div>{f.detail}</div><div className="ink2">{f.recommended_action}</div></div>
-                <div className="meta"><span>Owner: {f.owner}</span><span>Since {fmtDate(f.since)}</span></div>
-              </div>
-            ))}
-          </div>
-        ))}
-        {!rows.length && <div className="empty">Nothing matches these filters.</div>}
-      </div>
+      <TaskList tasks={rvTasks} empty="Nothing matches these filters." />
       <p className="note">
         New since last Monday, plus anything High priority.
         {dg.review_backlog != null && dg.review_backlog > review.length && <> {dg.review_backlog - review.length} ongoing items stay on each therapist’s page for their 1:1s.</>}
@@ -363,31 +441,12 @@ function Digest({ summary, names, T }: { summary: any; names: Record<string, str
     </>);
   } else if (tab === "scorecard") {
     body = (<>
-      <div className="dlist">
-        {sc.alerts.map((a) => (
-          <div className="drow" key={a.tid + a.title}>
-            <div className="who"><TName tid={a.tid} /></div>
-            <div className="body"><div className="ttl">{a.title}</div><div className="ink2">{a.detail}</div><div className="ink2">Next step: performance conversation.</div></div>
-            <div className="meta"><span className="chip c-below">Past flag</span><span>Owner: Lead</span></div>
-          </div>
-        ))}
-        {!sc.alerts.length && <div className="empty">No KPI newly fell past its flag line in the last 2 weeks.</div>}
-      </div>
+      <TaskList tasks={scTasks} empty="No KPI newly fell past its flag line in the last 2 weeks." />
       <p className="note">Compares this Monday ({fmtDate(sc.to)}) with two weeks earlier ({fmtDate(sc.from)}). New hires are excluded for their first {th.provider.ramp} days.</p>
     </>);
   } else {
     body = (<>
-      <div className="dlist">
-        {shouts.map((s) => (
-          <div className="drow" key={s.tid + s.title}>
-            <div className="who"><TName tid={s.tid} /></div>
-            <div className="body"><div className="ttl">{s.title}</div><div className="ink2">{s.detail}</div>
-              {s.patients && <div className="ink2">{s.patients.map((p, i) => <span key={p}>{i ? ", " : ""}<PLink id={p} /></span>)}</div>}</div>
-            <div className="meta"><span className="chip c-recog">{s.kind}</span></div>
-          </div>
-        ))}
-        {!shouts.length && <div className="empty">No shoutouts this week.</div>}
-      </div>
+      <TaskList tasks={shTasks} empty="No shoutouts this week." />
       <p className="note">Goals count once they’ve held for 2 weeks. Remission milestones: PHQ-9 below 5 for the first time, after starting at 10 or higher, in the last 30 days.</p>
     </>);
   }

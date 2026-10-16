@@ -345,3 +345,5 @@ a.linkish { text-decoration: none; }
 .kpi-group + .kpi-group { margin-top: 6px; }
 .kpi-group .mdom { margin: 14px 0 8px; }
 .kpi-group .kpis { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+.resolve-form.wide { grid-column: 1 / -1; }
+.drow .meta .btn { margin-top: 2px; }
