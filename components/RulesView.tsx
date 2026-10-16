@@ -43,7 +43,7 @@ function QualityApproach() {
         <div className="qrow">
           <span className="qlabel">For seniors</span>
           <p>
-            We add <b>close coordination with primary care</b> for chronic physical conditions, <b>robust safety escalation</b> given
+            For this patient population, we add <b>close coordination with primary care</b> for chronic physical conditions, <b>robust safety escalation</b> given
             the high suicide rate in late life, and <b>age-appropriate assessment</b> (GDS-15 geriatric depression screen and Mini-Cog).
           </p>
         </div>

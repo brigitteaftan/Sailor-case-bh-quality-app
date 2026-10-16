@@ -126,36 +126,44 @@ function UrgentList({ summary, names, T }: { summary: any; names: Record<string,
   );
 }
 
-/* ---------------- Pod KPIs ---------------- */
-const KPI_IDS = ["improvement", "remission", "followup_assessment", "safety_response", "early_dropout", "notes_48h", "claims_first_pass"];
+/* ---------------- Pod KPIs (every scorecard KPI, grouped by category) ---------------- */
 function Kpis({ summary }: { summary: any }) {
   const { th } = useThresholds();
   const pm = summary.pod.metrics, months = summary.trends.months;
+  const tile = (k: string) => {
+    const m = pm[k], st = statusOf(th, k, m.value, m.den);
+    const unit = k === "available_hours_pct" ? " hours" : "";
+    return (
+      <div className="kpi" key={k}>
+        <div className="lbl"><span>{MDEF[k].label}</span><StatusChip s={st} /></div>
+        <div className="val">{pctS(th, k, m.value, st)}</div>
+        <div className="tgt">{targetText(th, k)} · {m.num} of {m.den}{unit}</div>
+        <Spark values={summary.trends.pod[k]} months={months} target={th.metrics[k].target} label={`${MDEF[k].label} over 12 months`} />
+      </div>
+    );
+  };
   return (
     <section className="block" id="kpis">
       <div className="sec-head">
         <div><div className="eyebrow">Pod performance</div><h2>Pod at a glance</h2></div>
         <div className="right"><span className="sub">{summary.therapists.length} therapists · {pm.active_caseload.value} active patients · avg intake PHQ-9 {pm.avg_baseline_phq.value}</span></div>
       </div>
-      <div className="kpis">
-        {KPI_IDS.map((k) => {
-          const m = pm[k], st = statusOf(th, k, m.value, m.den);
-          return (
-            <div className="kpi" key={k}>
-              <div className="lbl"><span>{MDEF[k].label}</span><StatusChip s={st} /></div>
-              <div className="val">{pctS(th, k, m.value, st)}</div>
-              <div className="tgt">{targetText(th, k)} · {m.num} of {m.den}</div>
-              <Spark values={summary.trends.pod[k]} months={months} target={th.metrics[k].target} label={`${MDEF[k].label} over 12 months`} />
-            </div>
-          );
-        })}
-        <div className="kpi">
-          <div className="lbl"><span>Hours filled / offered</span><span className="chip c-context">Context</span></div>
-          <div className="val">{pct(pm.utilization.value)}</div>
-          <div className="tgt">{pm.filled_hours.value} of {pm.available_hours.value} clinical hours a week filled (last 4 weeks)</div>
-          <Spark values={summary.trends.pod.utilization} months={months} label="Utilization over 12 months" />
+      {DOMAINS.map((dn) => (
+        <div className="kpi-group" key={dn}>
+          <div className="mdom">{dn}</div>
+          <div className="kpis">
+            {SCORED.filter((k) => MDEF[k].domain === dn).map(tile)}
+            {dn === "Access" && (
+              <div className="kpi">
+                <div className="lbl"><span>Hours filled / offered</span><span className="chip c-context">Context</span></div>
+                <div className="val">{pct(pm.utilization.value)}</div>
+                <div className="tgt">{pm.filled_hours.value} of {pm.available_hours.value} clinical hours a week filled (last 4 weeks). Not scored.</div>
+                <Spark values={summary.trends.pod.utilization} months={months} label="Utilization over 12 months" />
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      ))}
     </section>
   );
 }
