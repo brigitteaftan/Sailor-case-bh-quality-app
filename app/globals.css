@@ -311,3 +311,7 @@ a.linkish { text-decoration: none; }
 .qrow p { font-size: 15px; line-height: 1.55; max-width: 90ch; }
 .qrow b { font-weight: 700; color: var(--ink); }
 @media (max-width: 600px) { .qrow { grid-template-columns: minmax(0, 1fr); } }
+
+.cadence { display: flex; flex-wrap: wrap; gap: 6px 22px; margin: 0 0 12px; color: var(--ink-2); font-size: 14px; }
+.cadence b { color: var(--ink); font-weight: 600; }
+.block .savebar { margin-bottom: 4px; }

@@ -69,51 +69,15 @@ export default function RulesView({ rules }: { rules: any }) {
   return (
     <>
       <QualityApproach />
-      <div className="savebar">
-        <span>{changed ? "You’ve changed some thresholds. The dashboard reflects your edits. Saved in this browser only." : "Edit any threshold below and the dashboard updates right away. Defaults come from config/rules.json; edits here are saved in this browser only."}</span>
-        <span style={{ flex: 1 }} />
-        <button className="btn small" onClick={() => { reset(); toast("Thresholds reset to defaults"); }}>Reset to defaults</button>
-      </div>
-
-      <section className="block">
-        <div className="sec-head"><div><div className="eyebrow">Notifications</div><h2>How notifications work</h2></div></div>
-        <div className="rules-intro">
-          <div className="panel" style={{ margin: 0 }}>
-            <h3>Rules for every notification</h3>
-            <ul>{rules.global_rules.map((g: string) => <li key={g}>{g}</li>)}</ul>
-          </div>
-          <div className="panel" style={{ margin: 0 }}>
-            <h3>Cadence</h3>
-            <div className="kv" style={{ gridTemplateColumns: "minmax(0,1fr)" }}>
-              <div><span>Daily (each weekday morning)</span><b>Urgent patient-safety escalations only. Suicide-risk screens go out the same day.</b></div>
-              <div><span>Every Monday</span><b>One digest across the whole pod: open urgent items, provider follow-ups, patient review list, scorecard changes and shoutouts.</b></div>
-              <div><span>Month-end close</span><b>Scorecard changes compare the last two month-end closes and appear in the next Monday digest.</b></div>
-            </div>
-          </div>
-        </div>
-        <div className="tablebox">
-          <table className="rtable">
-            <thead><tr><th>Tier</th><th>Cadence</th><th>Category</th><th>Trigger</th><th>Next step</th><th>Owner</th></tr></thead>
-            <tbody>
-              {rules.notification_rules.map((r: any) => (
-                <tr key={r.category + r.trigger}>
-                  <td><span className={`chip ${TIER_CLASS[r.tier]}`}>{r.tier}</span></td><td>{r.cadence}</td><td><b>{r.category}</b></td>
-                  <td className="trig">{ctrl[r.category] || r.trigger}</td><td>{r.action}</td><td>{r.owner}</td>
-                </tr>
-              ))}
-              <tr>
-                <td><span className="chip c-routine">All</span></td><td>—</td><td><b>New-hire ramp</b></td>
-                <td className="trig">No provider performance alerts for the first <NumInput id="pv-ramp" label="Ramp days" value={pv.ramp} dflt={dp.ramp} unit="days" onCommit={(v) => setProvider("ramp", v)} /></td>
-                <td>Patient-safety alerts still fire</td><td>—</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
 
       <section className="block">
         <div className="sec-head"><div><div className="eyebrow">Scorecard</div><h2>Scorecard metrics and thresholds</h2></div>
           <div className="right"><span className="sub">Target = meets goal. Flag line = flagged for follow-up.</span></div></div>
+        <div className="savebar">
+          <span>{changed ? "You’ve changed some thresholds. The dashboard reflects your edits. Saved in this browser only." : "Edit any threshold and the dashboard updates right away. Edits are saved in this browser only."}</span>
+          <span style={{ flex: 1 }} />
+          <button className="btn small" onClick={() => { reset(); toast("Thresholds reset to defaults"); }}>Reset to defaults</button>
+        </div>
         {DOMAINS.map((dn) => (
           <div key={dn}>
             <div className="mdom">{dn}</div>
@@ -138,16 +102,15 @@ export default function RulesView({ rules }: { rules: any }) {
                   </div>
                 );
               })}
+              {METRIC_DEFS.filter((m) => m.domain === dn && m.direction === "context").map((m) => (
+                <div className="mrule" key={m.id}>
+                  <div><div className="lbl">{m.label}</div><div className="def">{m.definition}</div></div>
+                  <div className="ctrl"><span className="chip c-context">Context · not rated</span></div>
+                </div>
+              ))}
             </div>
           </div>
         ))}
-        <div className="mdom">Context only (not rated)</div>
-        <div className="tablebox" style={{ overflow: "visible" }}>
-          {METRIC_DEFS.filter((m) => m.direction === "context").map((m) => (
-            <div className="mrule" key={m.id}><div><div className="lbl">{m.label}</div><div className="def">{m.definition}</div></div></div>
-          ))}
-          <div className="mrule"><div><div className="lbl">Average episode length</div><div className="def">Weeks from intake to planned discharge. Shown as context: a long episode can mean good continuity or a missing discharge plan.</div></div></div>
-        </div>
         <div className="panel" style={{ marginTop: 18 }}>
           <h3>Overall rating</h3>
           <div className="kv" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(220px,1fr))" }}>
@@ -161,11 +124,37 @@ export default function RulesView({ rules }: { rules: any }) {
       </section>
 
       <section className="block">
+        <div className="sec-head"><div><div className="eyebrow">Notifications</div><h2>Notifications and Associated Next Steps</h2></div></div>
+        <p className="cadence">
+          <span><b>Daily:</b> urgent patient-safety escalations only</span>
+          <span><b>Every Monday:</b> one digest for the whole pod</span>
+          <span><b>Month-end:</b> scorecard changes, in the next Monday digest</span>
+        </p>
+        <div className="tablebox">
+          <table className="rtable">
+            <thead><tr><th>Tier</th><th>Cadence</th><th>Category</th><th>Trigger</th><th>Next step</th><th>Owner</th></tr></thead>
+            <tbody>
+              {rules.notification_rules.map((r: any) => (
+                <tr key={r.category + r.trigger}>
+                  <td><span className={`chip ${TIER_CLASS[r.tier]}`}>{r.tier}</span></td><td>{r.cadence}</td><td><b>{r.category}</b></td>
+                  <td className="trig">{ctrl[r.category] || r.trigger}</td><td>{r.action}</td><td>{r.owner}</td>
+                </tr>
+              ))}
+              <tr>
+                <td><span className="chip c-routine">All</span></td><td>—</td><td><b>New-hire ramp</b></td>
+                <td className="trig">No provider performance alerts for the first <NumInput id="pv-ramp" label="Ramp days" value={pv.ramp} dflt={dp.ramp} unit="days" onCommit={(v) => setProvider("ramp", v)} /></td>
+                <td>Patient-safety alerts still fire</td><td>—</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="block">
         <div className="sec-head"><div><div className="eyebrow">Scope</div><h2>Not alerted on, on purpose</h2></div></div>
         <div className="offlist">
-          <div><b>Hospital and ED discharges</b><span className="ink2">Sailor has no reliable signal that a patient was admitted or discharged, so no therapist can be held to a 7-day follow-up. First addition once an ADT (admit/discharge/transfer) feed is in place.</span></div>
           <div><b>Patient no-shows on the therapist’s record</b><span className="ink2">Older adults miss sessions for health, hearing, technology and transport reasons. Patient no-shows route to care coordination for outreach; only provider-driven cancels count against a therapist.</span></div>
-          <div><b>“Most improved” recognition</b><span className="ink2">Shoutouts are for goals newly met and held for two month-ends, and for patients reaching remission.</span></div>
+          <div><b>Provider fill rate / productivity</b><span className="ink2">The percent of bookable time filled with appointments. Shown on the dashboard for capacity planning, but not scored or alerted on: pushing volume with a complex older population works against quality.</span></div>
         </div>
       </section>
       {node}
