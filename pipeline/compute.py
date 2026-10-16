@@ -373,7 +373,7 @@ def build_case_flags(as_of):
             if gap >= 30:
                 add(pid, "Disengaged: no visit in 30+ days", "Review",
                     f"Last attended session {last_att[pid].date():%b %d} ({gap} days ago); {n_att[pid]} sessions total.",
-                    "Care coordinator outreach this week: check for barriers (tech, hearing, transport, health), contact the caregiver if consented, and offer phone sessions.",
+                    "Care coordinator outreach this week: check for barriers (video or phone setup, hearing, health), contact the caregiver if consented, and offer phone sessions.",
                     last_att[pid], owner="Care coordination")
         # 6. overdue outcome measure
         if pinfo.intake_date <= as_of - pd.Timedelta(days=60) and pid in last_att.index and \

@@ -156,7 +156,7 @@ export default function RulesView({ rules }: { rules: any }) {
       <section className="block">
         <div className="sec-head"><div><div className="eyebrow">Scope</div><h2>Not alerted on, on purpose</h2></div></div>
         <div className="offlist">
-          <div><b>Patient no-shows on the therapist’s record</b><span className="ink2">Older adults miss sessions for health, hearing, technology and transport reasons. Patient no-shows route to care coordination for outreach; only provider-driven cancels count against a therapist.</span></div>
+          <div><b>Patient no-shows on the therapist’s record</b><span className="ink2">Older adults miss sessions for health, hearing and technology reasons. Patient no-shows route to care coordination for outreach; only provider-driven cancels count against a therapist.</span></div>
           <div><b>Provider fill rate / productivity</b><span className="ink2">The percent of bookable time filled with appointments. Shown on the dashboard for capacity planning, but not scored or alerted on: pushing volume with a complex older population works against quality.</span></div>
         </div>
       </section>
