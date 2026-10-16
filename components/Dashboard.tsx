@@ -24,8 +24,8 @@ export default function Dashboard({ summary, names }: Props) {
   return (
     <>
       <UrgentList summary={summary} names={names} T={T} />
-      <Kpis summary={summary} />
       <Scorecard summary={summary} rated={rated} />
+      <Kpis summary={summary} />
       <Digest summary={summary} names={names} T={T} />
     </>
   );
@@ -169,15 +169,13 @@ function Scorecard({ summary, rated }: { summary: any; rated: Rated[] }) {
   useEffect(() => setFilter(store.get("ofilter", "All")), []);
   const counts: Record<string, number> = {};
   rated.forEach((r) => (counts[r.overall] = (counts[r.overall] || 0) + 1));
-  const needs = rated.filter((r) => r.overall === "Needs attention").sort((a, b) => reasons(b).length - reasons(a).length);
-  const watch = rated.filter((r) => r.overall === "Watch");
-  const excel = rated.filter((r) => r.overall === "Excelling");
   let rows = [...rated].sort((a, b) => OVERALL_ORDER[a.overall] - OVERALL_ORDER[b.overall] || reasons(b).length - reasons(a).length);
   if (filter !== "All") rows = rows.filter((r) => r.overall === filter);
   const groups = DOMAINS.map((d) => SCORED.filter((k) => MDEF[k].domain === d));
   const pm = summary.pod.metrics;
   const cell = (k: string, v: any, s: string, j: number) => {
-    const txt = s === "insufficient" ? (v.den ? `n=${v.den}` : "—") : pctS(th, k, v.value, s as any);
+    const txt = s === "insufficient" ? (v.den ? `n=${v.den}` : "—")
+      : k === "available_hours_pct" ? `${v.num}/${v.den}h` : pctS(th, k, v.value, s as any);
     return (
       <td key={k} className={j === 0 ? "g" : ""}>
         <span className={`cell ${s}`} title={`${MDEF[k].label}: ${v.value == null ? "no data" : pct(v.value)} (${v.num ?? 0} of ${v.den ?? 0}). ${targetText(th, k)}`}>
@@ -200,39 +198,27 @@ function Scorecard({ summary, rated }: { summary: any; rated: Rated[] }) {
           </div>
         </div>
       </div>
-      <div className="callouts">
-        <div className="callout">
-          <h3><Pill o="Needs attention" /><span className="muted">{needs.length} therapists · {watch.length} on watch</span></h3>
-          <ul>
-            {needs.concat(watch).map((r) => (
-              <li key={r.t.id}><Link className="linkish" href={`/therapists/${r.t.id}`}>{r.t.name}</Link><span className="why">{reasons(r).slice(0, 3).join(" · ")}</span></li>
-            ))}
-            {!needs.length && !watch.length && <li className="muted">No one is flagged.</li>}
-          </ul>
-        </div>
-        <div className="callout">
-          <h3><Pill o="Excelling" /><span className="muted">{excel.length} therapists</span></h3>
-          <ul>
-            {excel.map((r) => (
-              <li key={r.t.id}><Link className="linkish" href={`/therapists/${r.t.id}`}>{r.t.name}</Link>
-                <span className="why">Improved {pct(r.t.metrics.improvement.value)} · remission {pct(r.t.metrics.remission.value)} · notes on time {pct(r.t.metrics.notes_48h.value)}</span></li>
-            ))}
-            {!excel.length && <li className="muted">No one is rated Excelling at these thresholds.</li>}
-          </ul>
-        </div>
-      </div>
       <div className="tablebox">
         <table className="score">
           <thead>
             <tr className="dom">
-              <th className="name"></th><th></th>
+              <th className="name"></th>
               {groups.map((g, i) => <th key={DOMAINS[i]} className="g" colSpan={g.length}>{DOMAINS[i]}</th>)}
-              <th className="g" colSpan={2}>Context</th>
+              <th className="g" colSpan={1}>Context</th>
             </tr>
             <tr>
-              <th className="name">Therapist</th><th>Rating</th>
-              {groups.map((g) => g.map((k, j) => <th key={k} className={j === 0 ? "g" : ""} title={`${MDEF[k].label}. ${targetText(th, k)}`}>{SHORT[k]}</th>))}
-              <th className="g">Hours filled / offered</th><th>Active pts</th>
+              <th className="name">Therapist · rating</th>
+              {groups.map((g) => g.map((k, j) => (
+                <th key={k} className={j === 0 ? "g" : ""} title={`${MDEF[k].label}. ${targetText(th, k)}`}>{SHORT[k]}</th>
+              )))}
+              <th className="g">Active pts</th>
+            </tr>
+            <tr className="tgt-row">
+              <th className="name">Target</th>
+              {groups.map((g) => g.map((k, j) => (
+                <th key={k} className={j === 0 ? "g" : ""}>{MDEF[k].direction === "higher" ? "≥" : "≤"}{pct(th.metrics[k].target)}</th>
+              )))}
+              <th className="g"></th>
             </tr>
           </thead>
           <tbody>
@@ -240,19 +226,22 @@ function Scorecard({ summary, rated }: { summary: any; rated: Rated[] }) {
               const t = r.t, m = t.metrics;
               return (
                 <tr key={t.id} onClick={() => router.push(`/therapists/${t.id}`)}>
-                  <td className="name"><Link href={`/therapists/${t.id}`} className="tname" style={{ color: "var(--ink)", textDecoration: "none" }}>{t.name}</Link><span className="tsub">{t.credential} · {tenureText(t.tenure_months)}</span></td>
-                  <td><Pill o={r.overall} /></td>
+                  <td className="name">
+                    <Link href={`/therapists/${t.id}`} className="tname" style={{ color: "var(--ink)", textDecoration: "none" }}>{t.name}</Link>
+                    <span className="tsub">{t.credential} · {tenureText(t.tenure_months)}</span>
+                    <span className="trate"><Pill o={r.overall} /></span>
+                  </td>
                   {groups.map((g) => g.map((k, j) => cell(k, m[k], r.st[k], j)))}
-                  <td className="g">{m.filled_hours.value} / {m.available_hours.value}</td><td>{m.active_caseload.value}</td>
+                  <td className="g">{m.active_caseload.value}</td>
                 </tr>
               );
             })}
           </tbody>
           <tfoot>
             <tr>
-              <td className="name">Pod total</td><td></td>
+              <td className="name">Pod total</td>
               {groups.map((g) => g.map((k, j) => cell(k, pm[k], statusOf(th, k, pm[k].value, pm[k].den), j)))}
-              <td className="g">{pm.filled_hours.value} / {pm.available_hours.value}</td><td>{pm.active_caseload.value}</td>
+              <td className="g">{pm.active_caseload.value}</td>
             </tr>
           </tfoot>
         </table>
@@ -370,9 +359,9 @@ function Digest({ summary, names, T }: { summary: any; names: Record<string, str
             <div className="meta"><span className="chip c-below">Past flag</span><span>Owner: Lead</span></div>
           </div>
         ))}
-        {!sc.alerts.length && <div className="empty">No metric newly fell past its flag line at the last close.</div>}
+        {!sc.alerts.length && <div className="empty">No KPI newly fell past its flag line in the last 2 weeks.</div>}
       </div>
-      <p className="note">Compares the {fmtDateY(sc.close)} month-end close with the month before. New hires are excluded for their first {th.provider.ramp + 60} days.</p>
+      <p className="note">Compares this Monday ({fmtDate(sc.to)}) with two weeks earlier ({fmtDate(sc.from)}). New hires are excluded for their first {th.provider.ramp} days.</p>
     </>);
   } else {
     body = (<>
@@ -387,7 +376,7 @@ function Digest({ summary, names, T }: { summary: any; names: Record<string, str
         ))}
         {!shouts.length && <div className="empty">No shoutouts this week.</div>}
       </div>
-      <p className="note">Goals count only when met at two month-end closes in a row. Remission milestones: PHQ-9 below 5 for the first time, after starting at 10 or higher, in the last 30 days.</p>
+      <p className="note">Goals count once they’ve held for 2 weeks. Remission milestones: PHQ-9 below 5 for the first time, after starting at 10 or higher, in the last 30 days.</p>
     </>);
   }
 

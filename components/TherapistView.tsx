@@ -36,7 +36,7 @@ export default function TherapistView({ summary, tid, patients, names }: {
       <div className="dh"><h2>{t.name}</h2><Pill o={r.overall} /></div>
       <div className="facts">
         <span><b>{t.credential}</b></span><span>Hired <b>{fmtDateY(t.hire_date)}</b></span><span><b>{m.active_caseload.value}</b> active patients</span>
-        <span><b>{m.filled_hours.value}</b> of <b>{sig.offered}</b> offered hours filled · {t.contracted_hours} contracted</span>
+        <span><b>{sig.offered}</b> of <b>{t.contracted_hours}</b> contracted hours open for booking</span>
         <span>Avg intake PHQ-9 <b>{m.avg_baseline_phq.value ?? "—"}</b></span><span>Avg episode <b>{m.avg_episode_weeks.value ?? "—"}</b> weeks</span>
       </div>
 

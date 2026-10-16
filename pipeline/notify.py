@@ -66,7 +66,7 @@ def digest_message(s):
             out.append(f"• {tname[a['therapist_id']]}: {a['title']}. {a['detail']}")
         out.append("")
     if g["scorecard_changes"]:
-        out.append(f"*Scorecard changes ({g['month_close']} close)*")
+        out.append(f"*Scorecard changes (vs. {g['compare_dates'][1]})*")
         for a in g["scorecard_changes"]:
             out.append(f"• {tname[a['therapist_id']]}: {a['title']}")
         out.append("")

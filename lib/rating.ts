@@ -6,7 +6,7 @@
 // and see the effect immediately. Keep the two in sync.
 
 import rules from "@/config/rules.json";
-import { fmtDate, monthName, parseD, pct, DAY_MS } from "./format";
+import { fmtDate, parseD, pct, DAY_MS } from "./format";
 
 export type MetricStatus = "meets" | "watch" | "below" | "insufficient" | "context";
 export type Overall = "Needs attention" | "Watch" | "On track" | "Excelling" | "Too early to rate";
@@ -24,7 +24,7 @@ export const SHORT: Record<string, string> = {
   intake_assessment: "Intake assess.", care_plan: "Care plan by s2", geriatric_screen: "Geri screen",
   followup_assessment: "Re-measured 60d", improvement: "Improved", remission: "Remission 6 mo",
   safety_response: "Same-day safety plan", pcp_referral: "PCP referral 7d", early_dropout: "Early dropout",
-  provider_cancel: "Provider cancels", provider_resched: "Provider resched.", notes_48h: "Notes 48h", claims_first_pass: "Claims 1st pass",
+  provider_cancel: "Provider cancels", provider_resched: "Provider resched.", available_hours_pct: "Avail. hours vs. commit", notes_48h: "Notes 48h", claims_first_pass: "Claims 1st pass",
 };
 
 export function defaultThresholds(): Thresholds {
@@ -122,37 +122,33 @@ export function providerAlerts(th: Thresholds, summary: any) {
   return { out, suppressed };
 }
 
-/* ---------- Month-end scorecard changes and goal shoutouts ---------- */
-export function monthStatuses(th: Thresholds, summary: any, tid: string, i: number) {
-  const tr = summary.trends.therapists[tid], st: Record<string, MetricStatus> = {};
-  SCORED.forEach((k) => { const v = tr[k] ? tr[k][i] : null; st[k] = v == null ? "insufficient" : cmp(th, k, v); });
-  return st;
-}
+/* ---------- Rolling 2-week scorecard changes and goal shoutouts (Monday digest) ---------- */
 const SLABEL: Record<MetricStatus, string> = { meets: "Meets", watch: "Watch", below: "Past flag", insufficient: "Not enough data", context: "Context" };
 export const statusLabel = (s: MetricStatus) => SLABEL[s];
 
 export function scorecardChanges(th: Thresholds, summary: any) {
-  const months: string[] = summary.trends.months;
-  const asOf = parseD(summary.meta.as_of);
-  const closes = months.map((_, i) => i).filter((i) => i < months.length - 1 && parseD(months[i]) < asOf);
-  const [i3, i2, i1] = closes.slice(-3);
+  const snap = summary.notifications.scorecard_snapshots;
+  const [d4, d2, d0] = snap.dates as string[];
   const alerts: { tid: string; title: string; detail: string }[] = [];
   const shout: { tid: string; kind: string; title: string; detail: string; patients?: string[] }[] = [];
+  const st = (k: string, v: number | null): MetricStatus => (v == null ? "insufficient" : cmp(th, k, v));
   summary.therapists.forEach((t: any) => {
-    const s3 = monthStatuses(th, summary, t.id, i3), s2 = monthStatuses(th, summary, t.id, i2), s1 = monthStatuses(th, summary, t.id, i1);
-    const newRamp = (parseD(months[i1]).getTime() - parseD(t.hire_date).getTime()) / DAY_MS < th.provider.ramp + 60;
+    const ser = snap.therapists[t.id];
+    const newHire = (parseD(d0).getTime() - parseD(t.hire_date).getTime()) / DAY_MS < th.provider.ramp;
+    const s4: Record<string, MetricStatus> = {}, s2: Record<string, MetricStatus> = {}, s0: Record<string, MetricStatus> = {};
+    SCORED.forEach((k) => { const v = ser[k] || [null, null, null]; s4[k] = st(k, v[0]); s2[k] = st(k, v[1]); s0[k] = st(k, v[2]); });
     SCORED.forEach((k) => {
-      const lbl = MDEF[k].label, v1 = summary.trends.therapists[t.id][k][i1];
-      if (s1[k] === "below" && s2[k] !== "below" && !newRamp)
-        alerts.push({ tid: t.id, title: `${lbl} fell past its flag line`, detail: `${pct(v1)} at the ${fmtDate(months[i1])} close (was ${SLABEL[s2[k]].toLowerCase()} on ${fmtDate(months[i2])}). ${targetText(th, k)}.` });
-      if (s1[k] === "meets" && s2[k] === "meets" && (s3[k] === "watch" || s3[k] === "below"))
-        shout.push({ tid: t.id, kind: "Goal met", title: `Hit goal: ${lbl}`, detail: `Met target at the ${fmtDate(months[i2])} and ${fmtDate(months[i1])} closes, after missing it in ${monthName(months[i3])}. Now ${pct(v1)}.` });
+      const v = ser[k] || [null, null, null], lbl = MDEF[k].label;
+      if (s0[k] === "below" && s2[k] !== "below" && !newHire)
+        alerts.push({ tid: t.id, title: `${lbl} fell past its flag line`, detail: `Now ${pct(v[2])}; it was ${pct(v[1])} two weeks ago. ${targetText(th, k)}.` });
+      if (s0[k] === "meets" && s2[k] === "meets" && (s4[k] === "watch" || s4[k] === "below"))
+        shout.push({ tid: t.id, kind: "Goal met", title: `Hit goal: ${lbl}`, detail: `At target for 2 weeks, after missing it 4 weeks ago. Now ${pct(v[2])}.` });
     });
-    const o3 = overallOf(s3), o2 = overallOf(s2), o1 = overallOf(s1);
-    if (o1 === "Excelling" && o2 === "Excelling" && o3 !== "Excelling")
-      shout.push({ tid: t.id, kind: "Goal met", title: "Overall rating: Excelling", detail: `Rated Excelling at the last two month-end closes (was ${o3} in ${monthName(months[i3])}).` });
+    const o4 = overallOf(s4), o2 = overallOf(s2), o0 = overallOf(s0);
+    if (o0 === "Excelling" && o2 === "Excelling" && o4 !== "Excelling")
+      shout.push({ tid: t.id, kind: "Goal met", title: "Overall rating: Excelling", detail: `Rated Excelling for 2 weeks (was ${o4} 4 weeks ago).` });
   });
-  return { alerts, shout, close: months[i1] };
+  return { alerts, shout, from: d2, to: d0 };
 }
 
 /* ---------- Draft 1:1 agenda ---------- */

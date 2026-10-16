@@ -71,7 +71,7 @@ export default function RulesView({ rules }: { rules: any }) {
       <QualityApproach />
 
       <section className="block">
-        <div className="sec-head"><div><div className="eyebrow">Scorecard</div><h2>Scorecard metrics and thresholds</h2></div>
+        <div className="sec-head"><div><div className="eyebrow">Scorecard</div><h2>Scorecard KPIs and Targets</h2></div>
           <div className="right"><span className="sub">Target = meets goal. Flag line = flagged for follow-up.</span></div></div>
         <div className="savebar">
           <span>{changed ? "You’ve changed some thresholds. The dashboard reflects your edits. Saved in this browser only." : "Edit any threshold and the dashboard updates right away. Edits are saved in this browser only."}</span>
@@ -125,10 +125,13 @@ export default function RulesView({ rules }: { rules: any }) {
 
       <section className="block">
         <div className="sec-head"><div><div className="eyebrow">Notifications</div><h2>Notifications and Associated Next Steps</h2></div></div>
+        <p className="assume">
+          This assumes the pod lead has async access to their providers every day, can schedule ad-hoc meetings as needed,
+          and holds 1:1s with each direct report every two weeks.
+        </p>
         <p className="cadence">
           <span><b>Daily:</b> urgent patient-safety escalations only</span>
-          <span><b>Every Monday:</b> one digest for the whole pod</span>
-          <span><b>Month-end:</b> scorecard changes, in the next Monday digest</span>
+          <span><b>Every Monday:</b> one digest for the whole pod, including scorecard changes over the prior 2 weeks</span>
         </p>
         <div className="tablebox">
           <table className="rtable">

@@ -161,18 +161,18 @@
       "fmt": "pct"
     },
     {
-      "id": "available_hours",
+      "id": "available_hours_pct",
       "domain": "Access",
       "label": "Available hours / week",
-      "definition": "Bookable clinical hours the therapist offers each week. Shown for capacity planning; compared to their contracted clinical hours.",
-      "numerator": "Open clinical hours in the schedule",
-      "denominator": "",
-      "window": "Current",
-      "target": null,
-      "flag": null,
-      "direction": "context",
-      "min_n": 0,
-      "fmt": "hours"
+      "definition": "Hours the therapist opens for booking each week, as a share of the clinical hours they committed to.",
+      "numerator": "Hours open for booking this week",
+      "denominator": "Contracted clinical hours per week",
+      "window": "Current week",
+      "target": 1.0,
+      "flag": 0.75,
+      "direction": "higher",
+      "min_n": 1,
+      "fmt": "pct"
     },
     {
       "id": "notes_48h",
@@ -262,9 +262,9 @@
     },
     {
       "tier": "Review",
-      "cadence": "Monday digest (monthly close)",
+      "cadence": "Monday digest",
       "category": "Scorecard",
-      "trigger": "A scorecard metric newly fell below its flag line at the latest month-end",
+      "trigger": "A scorecard KPI newly fell past its flag line over the prior 2 weeks",
       "action": "Performance conversation",
       "owner": "Lead"
     },
@@ -272,7 +272,7 @@
       "tier": "Recognition",
       "cadence": "Monday digest",
       "category": "Shoutouts",
-      "trigger": "Goal newly met and sustained for two month-ends (metric or overall rating); patients newly in remission",
+      "trigger": "A target newly met and held for 2 weeks (KPI or overall rating); patients newly in remission",
       "action": "Give a shoutout",
       "owner": "Lead"
     }

@@ -224,11 +224,15 @@ def compute_metrics(as_of, tid=None):
     # capacity
     if tid is None:
         cap = sum(offered_hours(t["id"], as_of) for t in THERAPISTS)
+        contracted = sum(t["contracted_hours"] for t in THERAPISTS if pd.Timestamp(t["hire_date"]) <= as_of)
     else:
         cap = offered_hours(tid, as_of)
+        t_ = next(x for x in THERAPISTS if x["id"] == tid)
+        contracted = t_["contracted_hours"] if pd.Timestamp(t_["hire_date"]) <= as_of else 0
     a28 = att[att.date > as_of - pd.Timedelta(days=28)]
     filled = a28.minutes.sum() / 60 / 4
     out["available_hours"] = dict(value=float(cap), num=None, den=None)
+    out["available_hours_pct"] = dict(value=rate(cap, contracted), num=round(float(cap), 1), den=round(float(contracted), 1))
     out["filled_hours"] = dict(value=round(float(filled), 1), num=None, den=None)
     out["utilization"] = dict(value=rate(filled, cap), num=None, den=None)
 
@@ -509,46 +513,53 @@ def remission_milestones(as_of, days=30):
     return out
 
 
-def scorecard_changes(monthly):
-    """monthly: {tid: [(date, statuses, overall), ...]} oldest -> newest month-end closes."""
+def scorecard_changes(snap):
+    """Rolling change detection for the Monday digest.
+
+    snap: {"dates": [4 weeks ago, 2 weeks ago, this Monday], "therapists": {tid: {metric: [v, v, v]}}}
+    Alert: a KPI is past its flag line now but wasn't 2 weeks ago.
+    Shoutout: a target met now and 2 weeks ago, after missing it 4 weeks ago (held for 2 weeks).
+    """
+    d4, d2, d0 = snap["dates"]
     alerts, shout = [], []
+
+    def st_of(mid, v):
+        return "insufficient" if v is None else metric_status(mid, dict(value=v, den=10 ** 6))
+
     for t in THERAPISTS:
         tid = t["id"]
-        ser = monthly[tid]
-        if len(ser) < 3:
-            continue
-        (d3, s3, o3), (d2, s2, o2), (d1, s1, o1) = ser[-3:]
-        new_ramp = (pd.Timestamp(d1) - pd.Timestamp(t["hire_date"])).days < RAMP_DAYS + 60
-        for mid, st in s1.items():
+        ser = snap["therapists"][tid]
+        new_hire = (pd.Timestamp(d0) - pd.Timestamp(t["hire_date"])).days < RAMP_DAYS
+        s4, s2, s0 = ({mid: st_of(mid, ser[mid][i]) for mid in ser} for i in range(3))
+        for mid in ser:
             m = METRIC_BY_ID[mid]
-            if st == "context":
-                continue
-            if st == "below" and s2.get(mid) not in ("below",) and not new_ramp:
+            if s0[mid] == "below" and s2[mid] != "below" and not new_hire:
                 alerts.append(dict(therapist_id=tid, tier="Review", category="Scorecard",
-                                   title=f"{m['label']} fell below flag line",
-                                   detail=f"{m['label']} moved from {s2.get(mid)} to below at the {pd.Timestamp(d1):%b %d} close.",
+                                   title=f"{m['label']} fell past its flag line",
+                                   detail=f"Now {ser[mid][2]:.0%}; it was {ser[mid][1]:.0%} two weeks ago." if ser[mid][1] is not None else f"Now {ser[mid][2]:.0%}.",
                                    action="Performance conversation", owner="Lead", metric=mid))
-            if st == "meets" and s2.get(mid) == "meets" and s3.get(mid) in ("watch", "below"):
+            if s0[mid] == "meets" and s2[mid] == "meets" and s4[mid] in ("watch", "below"):
                 shout.append(dict(therapist_id=tid, tier="Recognition", category="Goal met",
                                   title=f"Hit goal: {m['label']}",
-                                  detail=f"Met target at the {pd.Timestamp(d2):%b %d} and {pd.Timestamp(d1):%b %d} closes (was {s3.get(mid)} in {pd.Timestamp(d3):%B}).",
+                                  detail=f"At target for 2 weeks, after missing it 4 weeks ago. Now {ser[mid][2]:.0%}.",
                                   action="Give a shoutout", owner="Lead", metric=mid))
-        if o1 == "Excelling" and o2 == "Excelling" and o3 != "Excelling":
+        o4, o2, o0 = therapist_status(s4), therapist_status(s2), therapist_status(s0)
+        if o0 == "Excelling" and o2 == "Excelling" and o4 != "Excelling":
             shout.append(dict(therapist_id=tid, tier="Recognition", category="Goal met",
                               title="Overall rating: Excelling",
-                              detail=f"Rated Excelling at the last two month-end closes (was {o3} in {pd.Timestamp(d3):%B}).",
+                              detail=f"Rated Excelling for 2 weeks (was {o4} 4 weeks ago).",
                               action="Give a shoutout", owner="Lead", metric="overall"))
     return alerts, shout
 
 
-def build_notifications(daily_date, monday_date, monthly):
+def build_notifications(daily_date, monday_date, snap):
     daily_flags = build_case_flags(daily_date)
     monday_flags = build_case_flags(monday_date)
     monday_keys = {(f["patient_id"], f["flag"]) for f in monday_flags}
     daily_items = [dict(f, new_since_monday=(f["patient_id"], f["flag"]) not in monday_keys)
                    for f in daily_flags if f["priority"] == "Urgent"]
     prov, suppressed = provider_alerts(monday_date)
-    sc_alerts, sc_shout = scorecard_changes(monthly)
+    sc_alerts, sc_shout = scorecard_changes(snap)
     milestones = remission_milestones(monday_date)
     by_t = {}
     for m in milestones:
@@ -561,7 +572,7 @@ def build_notifications(daily_date, monday_date, monthly):
     review_order = {"High": 0, "Review": 1, "Routine": 2}
     digest = dict(
         date=pd.Timestamp(monday_date).date().isoformat(),
-        month_close=monthly[THERAPISTS[0]["id"]][-1][0],
+        compare_dates=snap["dates"],
         open_urgent=[f for f in monday_flags if f["priority"] == "Urgent"],
         provider_followups=prov,
         patient_review=sorted([f for f in monday_flags if f["priority"] != "Urgent"],
@@ -572,7 +583,7 @@ def build_notifications(daily_date, monday_date, monthly):
     )
     return dict(rules=NOTIFICATION_RULES, global_rules=GLOBAL_RULES,
                 daily=dict(date=pd.Timestamp(daily_date).date().isoformat(), items=daily_items),
-                monday_digest=digest, provider_signals=provider_signals(monday_date)), daily_flags
+                monday_digest=digest, provider_signals=provider_signals(monday_date), scorecard_snapshots=snap), daily_flags
 
 
 # ---------------------------------------------------------------------------
@@ -600,24 +611,26 @@ def main():
     months = list(pd.date_range(end=as_of, periods=11, freq="ME")) + [as_of]  # 11 month-end closes + today
     trend_ids = ["intake_assessment", "followup_assessment", "improvement", "remission", "early_dropout",
                  "provider_cancel", "provider_resched", "notes_48h", "claims_first_pass", "utilization",
-                 "safety_response", "pcp_referral", "care_plan", "geriatric_screen"]
+                 "safety_response", "pcp_referral", "care_plan", "geriatric_screen", "available_hours_pct"]
     trends = {"months": [d.date().isoformat() for d in months], "pod": {}, "therapists": {}}
     pod_series = [compute_metrics(d) for d in months]
     for mid in trend_ids:
         trends["pod"][mid] = [s[mid]["value"] for s in pod_series]
-    monthly = {}
     for t in THERAPISTS:
         ser = [compute_metrics(d, t["id"]) for d in months]
-        closes = []
-        for d, m_ in zip(months, ser):
-            if d.is_month_end and d < as_of:
-                st = {mid: metric_status(mid, m_[mid]) for mid in METRIC_BY_ID}
-                closes.append((d.date().isoformat(), st, therapist_status(st)))
-        monthly[t["id"]] = closes
         trends["therapists"][t["id"]] = {mid: [s[mid]["value"] if (s[mid]["den"] or 0) >= METRIC_BY_ID.get(mid, {}).get("min_n", 0) else None for s in ser] for mid in trend_ids}
 
+    # rolling 2-week snapshots for the Monday digest's scorecard changes and goal shoutouts
     monday = as_of - pd.Timedelta(days=as_of.weekday())
-    notifications, flags = build_notifications(as_of, monday, monthly)
+    snap_dates = [monday - pd.Timedelta(days=28), monday - pd.Timedelta(days=14), monday]
+    scored = [m["id"] for m in METRICS if m["direction"] != "context"]
+    snap = {"dates": [d.date().isoformat() for d in snap_dates], "therapists": {}}
+    for t in THERAPISTS:
+        ser = [compute_metrics(d, t["id"]) for d in snap_dates]
+        snap["therapists"][t["id"]] = {
+            mid: [s_[mid]["value"] if (s_[mid]["den"] or 0) >= METRIC_BY_ID[mid]["min_n"] else None for s_ in ser]
+            for mid in scored}
+    notifications, flags = build_notifications(as_of, monday, snap)
 
     def clean(df):
         df = df.copy()
