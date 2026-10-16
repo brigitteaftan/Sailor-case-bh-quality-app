@@ -301,3 +301,18 @@ a.linkish { text-decoration: none; }
 .search { display: flex; gap: 6px; align-items: center; }
 .search input { border: 1px solid var(--line-strong); border-radius: 8px; padding: 5px 9px; background: var(--panel); width: 190px; max-width: 100%; }
 .notfound { padding: 48px 0; display: grid; gap: 10px; }
+
+/* ---- What quality means ---- */
+.quality .lead { font-size: 15.5px; line-height: 1.6; max-width: 72ch; color: var(--ink); margin-bottom: 16px; }
+.pillars { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-bottom: 12px; }
+.pillar { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.pillar h3 { font-family: var(--f-display); font-size: 17px; font-weight: 700; }
+.pillar .q { font-weight: 600; color: var(--accent); }
+.pillar p { line-height: 1.55; }
+.pillar.wide { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 12px 24px; align-items: start; background: var(--accent-soft); border-color: transparent; }
+.pillar.wide .eyebrow { color: var(--accent); }
+@media (max-width: 760px) { .pillar.wide { grid-template-columns: minmax(0, 1fr); } }
+.mchips { display: flex; flex-wrap: wrap; gap: 6px; align-content: start; }
+.mchip { font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 6px; background: var(--panel-2); border: 1px solid var(--line); color: var(--ink-2); }
+.pillar.wide .mchip { background: var(--panel); }
+.mchip.alert { color: var(--crit); border-color: var(--crit-bg); }

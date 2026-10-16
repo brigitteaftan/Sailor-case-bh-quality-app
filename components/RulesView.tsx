@@ -27,7 +27,73 @@ function NumInput({ id, value, dflt, pctMode, unit, min = 0, max, onCommit, labe
   );
 }
 
-const TIER_CLASS: Record<string, string> = { Urgent: "c-urgent", High: "c-high", Review: "c-review", Recognition: "c-recog" };
+/* ---------- What quality BH care means at Sailor ---------- */
+const PILLARS = [
+  {
+    title: "Operational process",
+    q: "Are the right actions taking place?",
+    body: "Validated assessments at intake and again every two months, a care plan by the second visit, a same-day safety plan after a positive risk screen, and notes and claims done on time. These are fully in the therapist’s control, and they come before everything else.",
+    metrics: ["intake_assessment", "care_plan", "geriatric_screen", "followup_assessment", "safety_response", "notes_48h", "claims_first_pass"],
+  },
+  {
+    title: "Clinical improvement",
+    q: "Are patients getting better?",
+    body: "PHQ-9 improvement and remission for patients who started with at least moderate depression, and whether new patients stay in care long enough to benefit.",
+    metrics: ["improvement", "remission", "early_dropout"],
+  },
+  {
+    title: "Access",
+    q: "Can patients get care when they need it?",
+    body: "The hours a therapist opens for booking, and how often they cancel or reschedule. Access is largely in the provider’s hands, and every missed visit delays care.",
+    metrics: ["provider_cancel", "provider_resched"],
+    extra: ["Hours offered vs. contracted"],
+  },
+];
+
+function QualityApproach() {
+  const label = (id: string) => METRIC_DEFS.find((m) => m.id === id)?.label ?? id;
+  return (
+    <section className="block quality">
+      <div className="sec-head">
+        <div><div className="eyebrow">Our approach</div><h2>What quality BH care means at Sailor</h2></div>
+      </div>
+      <p className="lead">
+        Any behavioral health quality program rests on three foundations: the right actions are taking place, patients are getting better,
+        and patients can get care when they need it. Every therapist is measured on all three.
+      </p>
+      <div className="pillars">
+        {PILLARS.map((p) => (
+          <div className="pillar" key={p.title}>
+            <h3>{p.title}</h3>
+            <p className="q">{p.q}</p>
+            <p className="ink2">{p.body}</p>
+            <div className="mchips" aria-label={`${p.title} metrics`}>
+              {p.metrics.map((id) => <span className="mchip" key={id}>{label(id)}</span>)}
+              {p.extra?.map((x) => <span className="mchip" key={x}>{x}</span>)}
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="pillar wide">
+        <div>
+          <div className="eyebrow">For Sailor’s older adults</div>
+          <h3>Connection to physical health care</h3>
+          <p className="ink2">
+            Most Medicare patients live with two or more chronic conditions, and mood, pain, sleep, medications and memory all affect each other.
+            Therapists are often the first to hear about a fall, a new symptom or a medication problem. Getting that to the patient’s primary
+            care doctor quickly is part of quality behavioral health care here, so it is scored and it triggers an urgent alert when it doesn’t happen.
+          </p>
+        </div>
+        <div className="mchips" aria-label="Physical health metrics">
+          <span className="mchip">{label("pcp_referral")}</span>
+          <span className="mchip alert">Urgent alert: fall, confusion or medication reaction not sent to the PCP</span>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+const TIER_CLASS: Record<string, string> ={ Urgent: "c-urgent", High: "c-high", Review: "c-review", Recognition: "c-recog" };
 
 export default function RulesView({ rules }: { rules: any }) {
   const { th, defaults, setMetric, setProvider, reset, changed } = useThresholds();
@@ -43,6 +109,7 @@ export default function RulesView({ rules }: { rules: any }) {
 
   return (
     <>
+      <QualityApproach />
       <div className="savebar">
         <span>{changed ? "You’ve changed some thresholds. The dashboard reflects your edits. Saved in this browser only." : "Edit any threshold below and the dashboard updates right away. Defaults come from config/rules.json; edits here are saved in this browser only."}</span>
         <span style={{ flex: 1 }} />
