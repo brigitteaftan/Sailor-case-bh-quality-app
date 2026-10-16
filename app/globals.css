@@ -1,56 +1,59 @@
 /* Layout: a working console. Today's urgent escalations first, then pod KPIs,
    the therapist scorecard, and the Monday digest; Rules on its own tab.
    Drill-downs (therapist, patient chart) open in a right-hand drawer. */
+/* Palette and type follow sailorhealth.com: navy headings in Georgia, DM Sans body,
+   ocean-blue actions, sky-blue accents, pale-blue surfaces. */
 :root {
-  --bg: #f3f6f6;
+  --bg: #f5f7fa;
   --panel: #ffffff;
-  --panel-2: #f8fafa;
-  --ink: #12201f;
-  --ink-2: #44585a;
-  --muted: #74888a;
-  --line: #d9e2e2;
-  --line-strong: #c3d0d0;
-  --accent: #0d6b6e;
+  --panel-2: #f2f7fb;
+  --ink: #1d2026;
+  --ink-2: #4b5568;
+  --muted: #6b7587;
+  --heading: #1f2c52;
+  --line: #e1e7ef;
+  --line-strong: #c9d4e2;
+  --accent: #0a4881;
   --accent-ink: #ffffff;
-  --accent-soft: #dceeed;
+  --accent-soft: #e6f4fc;
+  --sky: #32a2c9;
   --crit: #b8302f;
   --crit-bg: #fbe9e8;
-  --warn: #8f5d00;
-  --warn-bg: #fcf0d4;
+  --warn: #8a5a00;
+  --warn-bg: #fdf3d6;
   --good: #1b7a36;
   --good-bg: #e2f2e6;
-  --info-bg: #e7eef5;
-  --info: #2c5a85;
+  --info-bg: #e3f1fb;
+  --info: #0a4881;
   --mark-crit: #d03b3b;
   --mark-warn: #e3a00f;
   --mark-good: #0ca30c;
-  --series: #2a78d6;
-  --series-soft: rgba(42, 120, 214, 0.12);
-  --shadow: 0 1px 2px rgba(18, 32, 31, 0.06), 0 8px 24px rgba(18, 32, 31, 0.06);
-  --f-display: "Bricolage Grotesque", "Public Sans", system-ui, sans-serif;
-  --f-body: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --series: #2a8bb6;
+  --series-soft: rgba(50, 162, 201, 0.14);
+  --shadow: 0 1px 2px rgba(31, 44, 82, 0.06), 0 8px 24px rgba(31, 44, 82, 0.07);
+  --f-display: Georgia, "Times New Roman", Times, serif;
+  --f-body: "DM Sans", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+  --f-mono: "DM Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0e1617; --panel: #152022; --panel-2: #1a2729; --ink: #e4eeee; --ink-2: #a7bbbc; --muted: #7f9496;
-    --line: #26393b; --line-strong: #345052; --accent: #4fb6b4; --accent-ink: #0b1d1e; --accent-soft: #173537;
-    --crit: #f27a76; --crit-bg: #3a1b1b; --warn: #f0bd55; --warn-bg: #362a10; --good: #6cd08a; --good-bg: #16301f;
-    --info-bg: #182a3a; --info: #8fbbe6; --series: #3987e5; --series-soft: rgba(57, 135, 229, 0.18);
+    --bg: #0d1524; --panel: #142036; --panel-2: #1a2943; --ink: #e8eef6; --ink-2: #a9b6c8; --muted: #7f8ba0; --heading: #eef3fa;
+    --line: #243250; --line-strong: #34486d; --accent: #7cc4e4; --accent-ink: #0b1a2e; --accent-soft: #16304b; --sky: #5fb6dc;
+    --crit: #f27a76; --crit-bg: #3a1b1f; --warn: #f0bd55; --warn-bg: #362a12; --good: #6cd08a; --good-bg: #16301f;
+    --info-bg: #16304b; --info: #9fd3ee; --series: #5fb6dc; --series-soft: rgba(95, 182, 220, 0.18);
     --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.25);
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0e1617; --panel: #152022; --panel-2: #1a2729; --ink: #e4eeee; --ink-2: #a7bbbc; --muted: #7f9496;
-  --line: #26393b; --line-strong: #345052; --accent: #4fb6b4; --accent-ink: #0b1d1e; --accent-soft: #173537;
-  --crit: #f27a76; --crit-bg: #3a1b1b; --warn: #f0bd55; --warn-bg: #362a10; --good: #6cd08a; --good-bg: #16301f;
-  --info-bg: #182a3a; --info: #8fbbe6; --series: #3987e5; --series-soft: rgba(57, 135, 229, 0.18);
+  --bg: #0d1524; --panel: #142036; --panel-2: #1a2943; --ink: #e8eef6; --ink-2: #a9b6c8; --muted: #7f8ba0; --heading: #eef3fa;
+  --line: #243250; --line-strong: #34486d; --accent: #7cc4e4; --accent-ink: #0b1a2e; --accent-soft: #16304b; --sky: #5fb6dc;
+  --crit: #f27a76; --crit-bg: #3a1b1f; --warn: #f0bd55; --warn-bg: #362a12; --good: #6cd08a; --good-bg: #16301f;
+  --info-bg: #16304b; --info: #9fd3ee; --series: #5fb6dc; --series-soft: rgba(95, 182, 220, 0.18);
   --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.25);
   color-scheme: dark;
 }
 
-[hidden] { display: none !important; }
 body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 14px; line-height: 1.45; }
 .wrap { max-width: 1280px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 button, input, select, textarea { font: inherit; color: inherit; }
@@ -315,3 +318,16 @@ a.linkish { text-decoration: none; }
 .cadence { display: flex; flex-wrap: wrap; gap: 6px 22px; margin: 0 0 12px; color: var(--ink-2); font-size: 14px; }
 .cadence b { color: var(--ink); font-weight: 600; }
 .block .savebar { margin-bottom: 4px; }
+
+/* ---- Sailor brand type: Georgia headings in navy; numbers stay in DM Sans (Georgia uses old-style figures) ---- */
+.brand h1, .sec-head h2, .dh h2, .mdom, .quality h2, .notfound h2 { font-weight: 400; color: var(--heading); letter-spacing: 0; }
+.brand h1 { font-size: 24px; }
+.sec-head h2, .quality h2 { font-size: 24px; }
+.dh h2 { font-size: 30px; }
+.kpi .val { font-family: var(--f-body); font-weight: 700; letter-spacing: -0.02em; color: var(--heading); }
+.top { border-bottom: 1px solid var(--line); }
+.tab[aria-selected="true"] { border-bottom-color: var(--sky); color: var(--heading); }
+.btn.primary { border-radius: 8px; }
+
+.btn { text-decoration: none; display: inline-flex; align-items: center; }
+.c-esc { color: var(--accent-ink); }
