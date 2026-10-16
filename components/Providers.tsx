@@ -16,7 +16,7 @@ type ThCtx = {
 };
 const ThresholdsContext = createContext<ThCtx | null>(null);
 
-type ResCtx = { resolved: Record<string, Resolution>; resolve: (k: string, note: string) => void; reopen: (k: string) => void };
+type ResCtx = { resolved: Record<string, Resolution>; resolve: (k: string, note: string) => void; reopen: (k: string) => void; clearAll: () => void };
 const ResolutionsContext = createContext<ResCtx | null>(null);
 
 type TipState = { content: ReactNode; x: number; y: number } | null;
@@ -53,6 +53,7 @@ export function Providers({ children }: { children: ReactNode }) {
     resolved,
     resolve: (k, note) => setResolved((cur) => { const n = { ...cur, [k]: { note, at: new Date().toISOString() } }; store.set("resolved", n); return n; }),
     reopen: (k) => setResolved((cur) => { const n = { ...cur }; delete n[k]; store.set("resolved", n); return n; }),
+    clearAll: () => { setResolved({}); store.set("resolved", {}); },
   };
 
   const [tip, setTip] = useState<TipState>(null);

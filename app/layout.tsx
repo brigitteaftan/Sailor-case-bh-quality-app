@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import Header from "@/components/Header";
+import ResetDemo from "@/components/ResetDemo";
 import { getSummary } from "@/lib/data";
 import { longDate } from "@/lib/format";
 
@@ -30,6 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div className="foot">
               <span>{s.meta.source === "mock" ? "Synthetic data only. No real patients or providers." : "Contains PHI. Handle per policy."}</span>
               <span>Data computed {s.meta.computed_at?.replace("T", " ")}</span>
+              {s.meta.source === "mock" && <ResetDemo />}
             </div>
           </footer>
         </Providers>
