@@ -201,7 +201,7 @@ P-1076,T01,Care plan review,2025-12-10,90-day care plan review,,
 P-1077,T01,Care plan,2025-07-14,Initial care plan documented,,
 P-1077,T01,Care plan review,2025-09-09,90-day care plan review,,
 P-1079,T01,Care plan,2025-07-18,Initial care plan documented,,
-P-1079,T01,Physical health concern,2025-07-18,Weight loss / poor appetite,,
+P-1079,T01,Physical health concern,2025-07-18,Weight loss / poor appetite,2025-07-31,Referred to PCP (late)
 P-1080,T01,Care plan,2025-07-29,Initial care plan documented,,
 P-1080,T01,Care plan review,2025-10-22,90-day care plan review,,
 P-1080,T01,Care plan review,2026-02-04,90-day care plan review,,
@@ -422,7 +422,7 @@ P-1167,T01,Care plan,2026-06-15,Initial care plan documented,,
 P-1167,T01,Physical health concern,2026-07-27,Memory changes noticed,2026-08-01,Referred to PCP
 P-1168,T01,Positive risk screen,2026-06-17,PHQ-9 12; C-SSRS positive,2026-06-17,Safety plan completed
 P-1168,T01,Care plan,2026-06-24,Initial care plan documented,,
-P-1168,T01,Physical health concern,2026-07-01,Weight loss / poor appetite,,
+P-1168,T01,Physical health concern,2026-07-01,Weight loss / poor appetite,2026-07-10,Referred to PCP (late)
 P-1168,T01,Care plan review,2026-08-12,90-day care plan review,,
 P-1168,T01,Physical health concern,2026-09-28,Memory changes noticed,2026-09-29,Referred to PCP
 P-1169,T01,Care plan,2026-06-26,Initial care plan documented,,
@@ -852,7 +852,7 @@ P-1338,T02,Care plan,2026-07-21,Initial care plan documented,,
 P-1338,T02,Care plan review,2026-09-22,90-day care plan review,,
 P-1339,T02,Care plan,2026-07-20,Initial care plan documented,,
 P-1340,T02,Care plan,2026-07-23,Initial care plan documented,,
-P-1340,T02,Physical health concern,2026-09-07,Sleep problems,,
+P-1340,T02,Physical health concern,2026-09-07,Sleep problems,2026-09-17,Referred to PCP (late)
 P-1340,T02,Care plan review,2026-10-14,90-day care plan review,,
 P-1341,T02,Care plan,2026-07-27,Initial care plan documented,,
 P-1341,T02,Care plan review,2026-10-12,90-day care plan review,,
@@ -959,7 +959,7 @@ P-1395,T03,Care plan review,2025-02-04,90-day care plan review,,
 P-1396,T03,Care plan,2025-01-20,Initial care plan documented,,
 P-1396,T03,Physical health concern,2025-01-27,Memory changes noticed,2025-01-28,Referred to PCP
 P-1396,T03,Care plan review,2025-03-24,90-day care plan review,,
-P-1396,T03,Physical health concern,2025-05-07,Recent fall,,
+P-1396,T03,Physical health concern,2025-05-07,Recent fall,2025-05-19,Referred to PCP (late)
 P-1397,T03,Care plan,2024-11-26,Initial care plan documented,,
 P-1397,T03,Care plan review,2025-02-05,90-day care plan review,,
 P-1398,T03,Care plan,2024-12-02,Initial care plan documented,,
@@ -1005,7 +1005,7 @@ P-1416,T03,Care plan,2025-04-08,Initial care plan documented,,
 P-1416,T03,Care plan review,2025-07-01,90-day care plan review,,
 P-1416,T03,Care plan review,2025-10-07,90-day care plan review,,
 P-1417,T03,Care plan review,2025-07-15,90-day care plan review,,
-P-1417,T03,Physical health concern,2025-08-25,Uncontrolled blood sugar reported,,
+P-1417,T03,Physical health concern,2025-08-25,Uncontrolled blood sugar reported,2025-09-06,Referred to PCP (late)
 P-1417,T03,Care plan review,2025-12-01,90-day care plan review,,
 P-1418,T03,Care plan,2025-04-14,Initial care plan documented,,
 P-1418,T03,Care plan review,2025-06-17,90-day care plan review,,
@@ -3619,7 +3619,7 @@ P-2588,T09,Care plan review,2025-05-08,90-day care plan review,,
 P-2590,T09,Care plan,2025-03-04,Initial care plan documented,,
 P-2590,T09,Care plan review,2025-05-08,90-day care plan review,,
 P-2591,T09,Care plan,2025-03-07,Initial care plan documented,,
-P-2591,T09,Positive risk screen,2025-03-28,PHQ-9 9; C-SSRS positive,,
+P-2591,T09,Positive risk screen,2025-03-28,PHQ-9 9; C-SSRS positive,2025-04-03,Safety plan completed (late)
 P-2591,T09,Care plan review,2025-05-13,90-day care plan review,,
 P-2592,T09,Care plan,2025-01-03,Initial care plan documented,,
 P-2592,T09,Care plan review,2025-03-17,90-day care plan review,,
@@ -3630,14 +3630,14 @@ P-2594,T09,Care plan,2025-01-07,Initial care plan documented,,
 P-2594,T09,Positive risk screen,2025-01-30,PHQ-9 17; C-SSRS positive,2025-01-30,Safety plan completed
 P-2594,T09,Care plan review,2025-02-24,90-day care plan review,,
 P-2594,T09,Care plan review,2025-04-24,90-day care plan review,,
-P-2595,T09,Positive risk screen,2024-10-21,PHQ-9 25; C-SSRS positive,,
+P-2595,T09,Positive risk screen,2024-10-21,PHQ-9 25; C-SSRS positive,2024-10-25,Safety plan completed (late)
 P-2595,T09,Care plan,2024-10-29,Initial care plan documented,,
 P-2596,T09,Care plan,2024-12-31,Initial care plan documented,,
 P-2596,T09,Care plan review,2025-04-08,90-day care plan review,,
 P-2596,T09,Care plan review,2025-08-14,90-day care plan review,,
 P-2598,T09,Care plan,2024-10-10,Initial care plan documented,,
 P-2598,T09,Care plan review,2024-12-10,90-day care plan review,,
-P-2598,T09,Positive risk screen,2025-01-27,PHQ-9 6; C-SSRS positive,,
+P-2598,T09,Positive risk screen,2025-01-27,PHQ-9 6; C-SSRS positive,2025-02-01,Safety plan completed (late)
 P-2599,T09,Care plan,2024-12-16,Initial care plan documented,,
 P-2599,T09,Care plan review,2025-02-03,90-day care plan review,,
 P-2600,T09,Care plan,2025-03-10,Initial care plan documented,,
@@ -3673,7 +3673,7 @@ P-2609,T09,Care plan review,2025-03-03,90-day care plan review,,
 P-2609,T09,Care plan review,2025-06-23,90-day care plan review,,
 P-2610,T09,Care plan,2025-01-13,Initial care plan documented,,
 P-2610,T09,Care plan review,2025-03-05,90-day care plan review,,
-P-2611,T09,Positive risk screen,2025-03-03,PHQ-9 15; C-SSRS positive,,
+P-2611,T09,Positive risk screen,2025-03-03,PHQ-9 15; C-SSRS positive,2025-03-10,Safety plan completed (late)
 P-2611,T09,Care plan,2025-03-10,Initial care plan documented,,
 P-2612,T09,Care plan,2024-12-09,Initial care plan documented,,
 P-2612,T09,Care plan review,2025-01-28,90-day care plan review,,
@@ -3762,7 +3762,7 @@ P-2650,T09,Care plan,2025-06-11,Initial care plan documented,,
 P-2650,T09,Care plan review,2025-08-12,90-day care plan review,,
 P-2650,T09,Care plan review,2025-09-30,90-day care plan review,,
 P-2650,T09,Care plan review,2025-11-26,90-day care plan review,,
-P-2650,T09,Physical health concern,2025-12-29,Possible medication side effects,,
+P-2650,T09,Physical health concern,2025-12-29,Possible medication side effects,2026-01-06,Referred to PCP (late)
 P-2651,T09,Care plan,2025-06-13,Initial care plan documented,,
 P-2651,T09,Care plan review,2025-09-03,90-day care plan review,,
 P-2651,T09,Care plan review,2026-01-12,90-day care plan review,,
@@ -3858,7 +3858,7 @@ P-2684,T09,Care plan,2025-12-02,Initial care plan documented,,
 P-2685,T09,Care plan,2025-12-01,Initial care plan documented,,
 P-2685,T09,Physical health concern,2025-12-30,Recent fall,2026-01-04,Referred to PCP
 P-2685,T09,Care plan review,2026-02-02,90-day care plan review,,
-P-2685,T09,Positive risk screen,2026-05-29,PHQ-9 17; C-SSRS positive,,
+P-2685,T09,Positive risk screen,2026-05-29,PHQ-9 17; C-SSRS positive,2026-06-03,Safety plan completed (late)
 P-2685,T09,Care plan review,2026-05-29,90-day care plan review,,
 P-2686,T09,Positive risk screen,2025-12-10,PHQ-9 8; C-SSRS positive,2025-12-10,Safety plan completed
 P-2686,T09,Care plan,2025-12-18,Initial care plan documented,,
@@ -3867,7 +3867,7 @@ P-2687,T09,Care plan,2025-12-24,Initial care plan documented,,
 P-2687,T09,Positive risk screen,2026-01-15,PHQ-9 24; C-SSRS positive,2026-01-20,Safety plan completed
 P-2687,T09,Care plan review,2026-02-11,90-day care plan review,,
 P-2687,T09,Positive risk screen,2026-03-11,PHQ-9 18; C-SSRS positive,2026-03-11,Safety plan completed
-P-2687,T09,Physical health concern,2026-05-05,Memory changes noticed,,
+P-2687,T09,Physical health concern,2026-05-05,Memory changes noticed,2026-05-18,Referred to PCP (late)
 P-2687,T09,Care plan review,2026-06-15,90-day care plan review,,
 P-2688,T09,Care plan,2025-12-29,Initial care plan documented,,
 P-2688,T09,Positive risk screen,2026-03-03,PHQ-9 13; C-SSRS positive,2026-03-03,Safety plan completed
@@ -3885,7 +3885,7 @@ P-2692,T09,Physical health concern,2026-06-02,Possible medication side effects,2
 P-2692,T09,Care plan review,2026-06-30,90-day care plan review,,
 P-2693,T09,Care plan,2026-01-07,Initial care plan documented,,
 P-2693,T09,Care plan review,2026-03-30,90-day care plan review,,
-P-2694,T09,Physical health concern,2026-01-14,New or worsening pain,,
+P-2694,T09,Physical health concern,2026-01-14,New or worsening pain,2026-01-27,Referred to PCP (late)
 P-2694,T09,Care plan,2026-02-04,Initial care plan documented,,
 P-2694,T09,Care plan review,2026-04-01,90-day care plan review,,
 P-2695,T09,Care plan,2026-01-20,Initial care plan documented,,
@@ -3900,7 +3900,7 @@ P-2697,T09,Positive risk screen,2026-06-15,PHQ-9 17; C-SSRS positive,2026-06-24,
 P-2698,T09,Care plan,2026-02-03,Initial care plan documented,,
 P-2698,T09,Care plan review,2026-04-08,90-day care plan review,,
 P-2698,T09,Care plan review,2026-07-30,90-day care plan review,,
-P-2698,T09,Positive risk screen,2026-09-23,PHQ-9 15; C-SSRS positive,,
+P-2698,T09,Positive risk screen,2026-09-23,PHQ-9 15; C-SSRS positive,2026-09-26,Safety plan completed (late)
 P-2699,T09,Care plan,2026-02-05,Initial care plan documented,,
 P-2699,T09,Care plan review,2026-03-24,90-day care plan review,,
 P-2699,T09,Physical health concern,2026-07-08,Shortness of breath reported,2026-07-10,Referred to PCP
@@ -4004,7 +4004,7 @@ P-2740,T09,Physical health concern,2026-07-21,Shortness of breath reported,2026-
 P-2741,T09,Care plan,2026-07-21,Initial care plan documented,,
 P-2741,T09,Care plan review,2026-09-24,90-day care plan review,,
 P-2742,T09,Physical health concern,2026-08-12,Sleep problems,2026-08-17,Referred to PCP
-P-2742,T09,Positive risk screen,2026-09-02,PHQ-9 14; C-SSRS positive,,
+P-2742,T09,Positive risk screen,2026-09-02,PHQ-9 14; C-SSRS positive,2026-09-07,Safety plan completed (late)
 P-2743,T09,Care plan,2026-08-05,Initial care plan documented,,
 P-2743,T09,Care plan review,2026-09-21,90-day care plan review,,
 P-2744,T09,Care plan,2026-08-10,Initial care plan documented,,
@@ -4014,7 +4014,7 @@ P-2747,T09,Positive risk screen,2026-08-31,PHQ-9 21; C-SSRS positive,2026-09-05,
 P-2747,T09,Care plan,2026-09-07,Initial care plan documented,,
 P-2748,T09,Care plan,2026-09-08,Initial care plan documented,,
 P-2749,T09,Care plan,2026-09-08,Initial care plan documented,,
-P-2750,T09,Positive risk screen,2026-09-11,PHQ-9 12; C-SSRS positive,,
+P-2750,T09,Positive risk screen,2026-09-11,PHQ-9 12; C-SSRS positive,2026-09-20,Safety plan completed (late)
 P-2750,T09,Care plan,2026-10-02,Initial care plan documented,,
 P-2751,T09,Care plan,2026-09-22,Initial care plan documented,,
 P-2751,T09,Positive risk screen,2026-10-13,PHQ-9 16; C-SSRS positive,2026-10-13,Safety plan completed
@@ -4316,4 +4316,4 @@ P-1130,T01,Elder abuse / neglect concern,2026-05-11,Possible neglect by paid car
 P-1669,T04,Elder abuse / neglect concern,2026-02-16,"Self-neglect: not eating, home unsafe",2026-02-17,Safety assessment documented; APS report filed
 P-2692,T09,Elder abuse / neglect concern,2026-06-16,Possible financial exploitation by a relative,2026-06-16,Safety assessment documented; APS report filed
 P-1528,T03,Elder abuse / neglect concern,2026-10-13,Possible financial exploitation by a relative,,
-P-1329,T02,Physical health concern,2026-09-29,Recent fall,,
+P-1329,T02,Physical health concern,2026-09-29,Recent fall,2026-10-10,Referred to PCP (late)

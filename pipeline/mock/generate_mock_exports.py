@@ -602,6 +602,20 @@ def write_exports():
     pd.DataFrame(assessments).to_csv(os.path.join(RAW_DIR, "assessments.csv"), index=False)
     # Sailor has no reliable signal for hospital / ED stays (no ADT feed), so those
     # events never appear in an export. The simulation still uses them (care gaps).
+    # Realism pass: in practice an urgent item doesn't sit open for weeks -- once it
+    # escalates, it gets worked. Items older than 10 days are closed late (still a
+    # miss on the therapist's scorecard), leaving a realistic handful open today.
+    late_rng = np.random.default_rng(SEED + 1)
+    urgent_types = {"Positive risk screen": (3, 9, "Safety plan completed (late)"),
+                    "Physical health concern": (8, 14, "Referred to PCP (late)"),
+                    "Elder abuse / neglect concern": (2, 5, "Safety assessment documented; APS report filed (late)")}
+    for e in care_events:
+        if e["type"] in urgent_types and not e.get("resolved_date"):
+            d = date.fromisoformat(e["date"])
+            if (AS_OF - d).days > 10:
+                lo, hi, label = urgent_types[e["type"]]
+                e["resolved_date"] = min(AS_OF, d + timedelta(days=int(late_rng.integers(lo, hi + 1)))).isoformat()
+                e["resolution"] = label
     ev = pd.DataFrame([e for e in care_events if e["type"] not in HOSPITAL_TYPES])
     ev.drop(columns=[c for c in ["discharge_date"] if c in ev.columns]).to_csv(os.path.join(RAW_DIR, "care_events.csv"), index=False)
     pd.DataFrame(claims).to_csv(os.path.join(RAW_DIR, "claims.csv"), index=False)
