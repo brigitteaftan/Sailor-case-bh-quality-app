@@ -342,7 +342,7 @@ def build_case_flags(as_of):
                 "Confirm the patient is safe today, document a safety assessment, and file with Adult Protective Services where state law requires.",
                 r.date, owner="Lead + therapist")
 
-    for pid in active_ids:
+    for pid in sorted(active_ids):
         ps = phq[phq.patient_id == pid]
         pinfo = active[active.patient_id == pid].iloc[0]
         # 3. worsening since last assessment
