@@ -1,4 +1,4 @@
-*Urgent escalations, 2026-10-22*: 4 open, 1 escalated to the clinical director
+*Urgent escalations, 2026-10-23*: 4 open, 1 escalated to the clinical director
 • *Suicide risk* · P-2736 · Marcus Bell · open 9d [ESCALATED]
    Next step: Reach the therapist today: confirm a same-day safety check-in with the patient, complete and document a safety plan, and consider a psychiatry consult.
 • *Suicide risk* · P-2023 · Kevin Marsh · open 2d [NEW]
