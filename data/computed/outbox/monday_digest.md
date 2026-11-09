@@ -1,4 +1,4 @@
-*Monday digest, 2026-11-02*
+*Monday digest, 2026-11-09*
 Open urgent items: 4
 Patients for review: 20
 
@@ -8,7 +8,7 @@ Patients for review: 20
 • Celeste Moreau: Fewer hours offered than contracted. 20 hours open for booking next week vs. 26 contracted.
 • Celeste Moreau: Provider late cancels / no-shows. 2 in the last week; 12 of 106 scheduled sessions (11%) over the last 4 weeks.
 
-*Scorecard changes (vs. 2026-10-19)*
+*Scorecard changes (vs. 2026-10-26)*
 • Marcus Bell: Remission at 6 months fell past its flag line
 
 *Shoutouts*
